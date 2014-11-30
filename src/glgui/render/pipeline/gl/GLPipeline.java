@@ -11,9 +11,13 @@ public class GLPipeline implements Pipeline {
 	private GLPainter m_painter;
 	private GL m_gl;
 	
-	public GLPipeline(GLWindow window) {
+	public GLPipeline() {}
+	
+	public void setup(GLWindow window) {
 		m_window = window;
 		m_gl = window.getGLWindow().getGL();
+		//Make the context current to set up the painter
+		m_gl.makeCurrent();
 		m_painter = new GLPainter(m_gl, this);
 		
 		m_painter.updateProjection(m_window.getGLWindow().getWidth(), m_window.getGLWindow().getHeight());
@@ -21,10 +25,14 @@ public class GLPipeline implements Pipeline {
 		m_window.getGLWindow().addResizedListener(new ResizeListener() {
 			@Override
 			public void onResize(int width, int height) {
+				boolean hasGL = m_gl.isCurrent();
+				if (!hasGL) m_gl.makeCurrent();
 				m_painter.getGL().glViewport(0, 0, width, height);
 				m_painter.updateProjection(width, height);
+				if (!hasGL)m_gl.releaseCurrent();
 			}
 		});
+		m_gl.releaseCurrent();
 	}
 	
 	@Override
@@ -47,6 +55,7 @@ public class GLPipeline implements Pipeline {
 
 	@Override
 	public void startRendering() {
+		m_gl.makeCurrent();
 		m_painter.start();
 	}
 
@@ -54,5 +63,6 @@ public class GLPipeline implements Pipeline {
 	public void stopRendering() {
 		m_window.getGLWindow().update();
 		m_painter.stop();
+		m_gl.releaseCurrent();
 	}
 }

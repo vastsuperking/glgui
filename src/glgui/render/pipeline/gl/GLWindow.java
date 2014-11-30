@@ -8,15 +8,18 @@ import gltools.gl.lwjgl.glfw.GLFWWindow;
 public class GLWindow implements PWindow {
 	private GLPipeline m_pipeline;
 	private Window m_window = null;
+	private boolean m_initialized = false;
 	
 	public GLWindow() {
-		m_window = new GLFWWindow();
-		m_window.setSize(1024, 1024);
-		m_window.setResizable(true);
-		m_window.init();
-		
-		m_pipeline = new GLPipeline(this);
+		m_window = new GLFWWindow();		
+		m_pipeline = new GLPipeline();
 	}
+	
+	@Override
+	public int getWidth() { return m_window.getWidth(); }
+	@Override
+	public int getHeight() { return m_window.getHeight(); }
+
 	
 	@Override
 	public Pipeline getPipeline() {
@@ -32,12 +35,25 @@ public class GLWindow implements PWindow {
 	public String getName() {
 		return m_window.getTitle();
 	}
+	@Override
+	public boolean isVisible(){
+		return m_window.isVisible();
+	}
+	@Override
+	public boolean isInitialized() {
+		return m_window.isInitialized();
+	}
 
 	public Window getGLWindow() { return m_window; }
 	
 	@Override
 	public void setVisible(boolean visible) {
-		m_window.setVisible(visible);
+		if (!m_initialized && visible) {
+			m_window.setResizable(true);
+			m_window.init();
+			m_pipeline.setup(this);
+			m_initialized = true;
+		} else m_window.setVisible(visible);
 	}
 	@Override
 	public void setSize(int width, int height) {

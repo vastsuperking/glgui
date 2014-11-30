@@ -2,7 +2,9 @@ package glgui.render.pipeline.gl;
 
 import glcommon.Color;
 import glcommon.util.ResourceLocator.ClasspathResourceLocator;
+import glcommon.vector.Matrix3f;
 import glcommon.vector.MatrixFactory;
+import glcommon.vector.Vector2f;
 import glextra.material.GlobalParamBindingSet;
 import glextra.material.Material;
 import glextra.material.MaterialXMLLoader;
@@ -96,7 +98,7 @@ public class GLPainter implements Painter {
 	
 	public void updateProjection(float width, float height) {
 		m_projMat.setCurrentMatrix(
-				MatrixFactory.createAffineProjectionMatrix(0, height, height, 0));
+				MatrixFactory.createAffineProjectionMatrix(0, width, height, 0));
 	}
 
 	public GL getGL() { return m_gl; }
@@ -109,10 +111,46 @@ public class GLPainter implements Painter {
 	@Override
 	public void setColor(Color color) {
 		m_material.setColor("color", color);
+		m_materialTextured.setColor("color", color);
 		m_color = color;
 	}
 	@Override
 	public Color getColor() { return m_color; }
+	
+	@Override
+	public Matrix3f getTransform() {
+		return m_modelMat.getCurrentMatrix();
+	}
+	@Override
+	public void setTransform(Matrix3f mat) {
+		m_modelMat.setCurrentMatrix(mat);
+	}
+	
+	@Override
+	public void pushTransform() {
+		m_modelMat.push();
+	}
+	
+	@Override
+	public void popTransform() {
+		m_modelMat.pop();
+	}
+	
+	@Override
+	public void translate(float x, float y) {
+		m_modelMat.getCurrentMatrix().mul(
+				MatrixFactory.createAffineTranslationMatrix(new Vector2f(x, y)));
+	}
+	@Override
+	public void rotate(float theta) {
+		m_modelMat.getCurrentMatrix().mul(
+				MatrixFactory.createAffineRotationMatrix(theta));		
+	}
+	@Override
+	public void scale(float x, float y) {
+		m_modelMat.getCurrentMatrix().mul(
+				MatrixFactory.createAffineScaleMatrix(new Vector2f(x, y)));
+	}
 	
 	@Override
 	public void drawLine(float x1, float y1, float x2, float y2) {
