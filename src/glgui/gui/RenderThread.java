@@ -1,5 +1,7 @@
 package glgui.gui;
 
+import glgui.gui.window.Window;
+
 import java.util.HashSet;
 
 public class RenderThread implements Runnable {

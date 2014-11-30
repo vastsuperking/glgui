@@ -61,8 +61,8 @@ public class GLPipeline implements Pipeline {
 
 	@Override
 	public void stopRendering() {
-		m_window.getGLWindow().update();
 		m_painter.stop();
 		m_gl.releaseCurrent();
+		m_window.getGLWindow().update();
 	}
 }

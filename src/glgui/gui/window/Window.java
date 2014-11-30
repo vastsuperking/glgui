@@ -1,5 +1,8 @@
-package glgui.gui;
+package glgui.gui.window;
 
+import glgui.gui.BorderPane;
+import glgui.gui.Pane;
+import glgui.gui.RenderThread;
 import glgui.painter.Painter;
 import glgui.render.pipeline.PWindow;
 import glgui.render.pipeline.PWindowProvider;
@@ -44,10 +47,8 @@ public class Window {
 		boolean wasVisible = m_window.isVisible();
 		m_window.setVisible(visible);
 		if (visible && !m_initialized) { m_initialized = true; }
-
 		if (!wasVisible && visible) RenderThread.getInstance().addWindow(this);
 		else if (wasVisible && !visible) RenderThread.getInstance().removeWindow(this);
-			
 	}
 
 	public void paint() {
@@ -56,7 +57,7 @@ public class Window {
 			pipeline.init();
 		}
 		pipeline.startRendering();
-
+		
 		Painter painter = pipeline.getPainter();
 		m_contentPane.paint(painter);
 		

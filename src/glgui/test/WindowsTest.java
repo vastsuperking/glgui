@@ -1,6 +1,6 @@
 package glgui.test;
 
-import glgui.gui.Window;
+import glgui.gui.window.Window;
 import glgui.render.pipeline.gl.GLWindowProvider;
 
 import java.io.IOException;
@@ -15,10 +15,10 @@ public class WindowsTest {
 		window.setName("Window");
 		window.setSize(1024, 1024);
 		
-		//Window window2 = new Window();
-		//window2.setVisible(true);
-		//window2.setName("Window2");
-		//window2.setSize(100, 100);
+		Window window2 = new Window();
+		window2.setVisible(true);
+		window2.setName("Window2");
+		window2.setSize(100, 100);
 		
 		//window.dispose();
 		//window2.dispose();
