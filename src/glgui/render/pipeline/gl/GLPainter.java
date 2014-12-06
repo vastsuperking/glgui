@@ -1,6 +1,9 @@
 package glgui.render.pipeline.gl;
 
 import glcommon.Color;
+import glcommon.font.Font;
+import glcommon.font.Font.Glyph;
+import glcommon.image.Image2D;
 import glcommon.util.ResourceLocator.ClasspathResourceLocator;
 import glcommon.vector.Matrix3f;
 import glcommon.vector.MatrixFactory;
@@ -8,9 +11,8 @@ import glcommon.vector.Vector2f;
 import glextra.material.GlobalParamBindingSet;
 import glextra.material.Material;
 import glextra.material.MaterialXMLLoader;
+import glextra.renderer.GLTextureManager;
 import glgui.painter.Painter;
-import glgui.painter.Texture;
-import glgui.render.pipeline.Pipeline;
 import gltools.Mode;
 import gltools.buffer.AttribArray;
 import gltools.buffer.ColorBuffer;
@@ -18,6 +20,7 @@ import gltools.buffer.Geometry;
 import gltools.buffer.IndexBuffer;
 import gltools.buffer.VertexBuffer;
 import gltools.gl.GL;
+import gltools.gl.GL1;
 import gltools.shader.InputUsage;
 import gltools.shader.Program.ProgramLinkException;
 import gltools.shader.Shader.ShaderCompileException;
@@ -34,8 +37,6 @@ public class GLPainter implements Painter {
 	public GLMatrix3f m_modelMat;
 	public GLMatrix3f m_projMat;
 	
-	private GLPipeline m_pipeline;
-	
 	private VertexBuffer m_verticesBuf;
 	private VertexBuffer m_texCoordsBuf;
 	private IndexBuffer m_indicesBuf;
@@ -43,6 +44,7 @@ public class GLPainter implements Painter {
 	private GlobalParamBindingSet m_globals = new GlobalParamBindingSet();
 	
 	private Color m_color = Color.BLACK;
+	private Font m_font = null;
 	
 	private GLTextureManager m_textureManager;
 	
@@ -54,9 +56,8 @@ public class GLPainter implements Painter {
 	//and don't have to recompile every time we switch
 	private Material m_materialTextured;
 	
-	public GLPainter(GL gl, GLPipeline pipeline) {
+	public GLPainter(GL gl) {
 		m_gl = gl;
-		m_pipeline = pipeline;
 		
 		m_textureManager = new GLTextureManager();
 		
@@ -85,6 +86,7 @@ public class GLPainter implements Painter {
 			e.printStackTrace();
 		}
 		m_material.selectTechnique();
+		m_materialTextured.selectTechnique();
 	}
 	
 	//Functions for GLPipeline
@@ -92,9 +94,14 @@ public class GLPainter implements Painter {
 	public void start() {
 		ColorBuffer.getInstance().clear(m_gl);
 		m_modelMat.setIdentity();
+
+		m_gl.glEnable(GL1.GL_BLEND);
+		m_gl.getGL1().glBlendFunc(GL1.GL_SRC_ALPHA,	GL1.GL_ONE_MINUS_SRC_ALPHA);
 	}
 	
-	public void stop() {}
+	public void stop() {
+		m_gl.glDisable(GL1.GL_BLEND);
+	}
 	
 	public void updateProjection(float width, float height) {
 		m_projMat.setCurrentMatrix(
@@ -104,10 +111,6 @@ public class GLPainter implements Painter {
 	public GL getGL() { return m_gl; }
 	
 	//Functions for Painter
-	
-	@Override
-	public Pipeline getPipeline() { return m_pipeline; }
-
 	@Override
 	public void setColor(Color color) {
 		m_material.setColor("color", color);
@@ -116,6 +119,15 @@ public class GLPainter implements Painter {
 	}
 	@Override
 	public Color getColor() { return m_color; }
+	
+	@Override
+	public void setFont(Font font) {
+		m_font = font;
+	}
+	@Override
+	public Font getFont() {
+		return m_font;
+	}
 	
 	@Override
 	public Matrix3f getTransform() {
@@ -212,26 +224,7 @@ public class GLPainter implements Painter {
 	public void fillRect(float x, float y, float width, float height) {
 		m_material.bind(m_gl, m_globals);
 
-		float vertices[] = {x + width, y + height,
-				x, y + height,
-				x, y,
-				x + width, y };
-		int indices[] = {0, 1, 2, 0, 2, 3};
-
-		m_verticesBuf.bind(m_gl);
-		m_verticesBuf.setValues(m_gl, vertices);
-		m_verticesBuf.unbind(m_gl);
-
-		m_indicesBuf.bind(m_gl.getGL1());
-		m_indicesBuf.setValues(m_gl.getGL1(), indices);
-		m_indicesBuf.unbind(m_gl.getGL1());
-
-		Geometry geo = new Geometry();
-		geo.addArray(new AttribArray(m_verticesBuf, InputUsage.VERTEX_POSITION_2D, 0, 0));
-		geo.setVertexCount(indices.length);
-		geo.setMode(Mode.TRIANGLES);
-		geo.setIndexBuffer(m_indicesBuf);
-		geo.render(m_gl);
+		fillRectNoMaterial(x, y, width, height);
 		
 		m_material.unbind(m_gl);
 	}
@@ -242,14 +235,14 @@ public class GLPainter implements Painter {
 	}	
 	
 	@Override
-	public void drawTexture(Texture t, float x, float y, float width, float height) {
-		drawTexture(t, x, y, width, height, 1, 1);
+	public void drawImage(Image2D i, float x, float y, float width, float height) {
+		drawImage(i, x, y, width, height, 1, 1);
 	}
 	
 	@Override
-	public void drawTexture(Texture t, float x, float y, float width, 
+	public void drawImage(Image2D i, float x, float y, float width, 
 							float height, float rx, float ry) {
-		Texture2D tex = m_textureManager.getGLTexture(m_gl, t);
+		Texture2D tex = m_textureManager.getTexture(m_gl, i);
 		m_materialTextured.setTexture2D("texture", tex);
 		m_materialTextured.bind(m_gl, m_globals);
 		
@@ -290,5 +283,57 @@ public class GLPainter implements Painter {
 	}
 	
 	@Override
+	public void drawString(String string, float x, float y, float scale) {
+		//The font we will be using
+		Font font = getFont();
+		if (font == null) throw new RuntimeException("No font set!");
+		if (string == null || string.equals("")) return;
+		
+		//First, push the transformation matrix
+		pushTransform();
+		translate(x, y);
+		
+		char[] chars = string.toCharArray();
+		for (char c : chars) {
+			if (c == '\n' || c == '\t') continue;
+			Glyph g = font.getGlyph(c);
+			
+			//Translate across the xoffset and down by the yoffset
+			Image2D image = g.getImage();
+			//Material is already set...
+			drawImage(image, scale * g.getXOff(), scale * (g.getYOff()), 
+						scale * image.getWidth(), 
+						scale * image.getHeight());
+			translate(g.getXAdvance() * scale, 0);
+		}
+		
+		//Pop it to get back to what we had before
+		popTransform();
+	}
+	
+	@Override
 	public void dispose() {}
+	
+	private void fillRectNoMaterial(float x, float y, float width, float height) {
+		float vertices[] = {x + width, y + height,
+				x, y + height,
+				x, y,
+				x + width, y };
+		int indices[] = {0, 1, 2, 0, 2, 3};
+
+		m_verticesBuf.bind(m_gl);
+		m_verticesBuf.setValues(m_gl, vertices);
+		m_verticesBuf.unbind(m_gl);
+
+		m_indicesBuf.bind(m_gl.getGL1());
+		m_indicesBuf.setValues(m_gl.getGL1(), indices);
+		m_indicesBuf.unbind(m_gl.getGL1());
+
+		Geometry geo = new Geometry();
+		geo.addArray(new AttribArray(m_verticesBuf, InputUsage.VERTEX_POSITION_2D, 0, 0));
+		geo.setVertexCount(indices.length);
+		geo.setMode(Mode.TRIANGLES);
+		geo.setIndexBuffer(m_indicesBuf);
+		geo.render(m_gl);
+	}
 }

@@ -2,9 +2,19 @@ package glgui.gui;
 
 import glgui.painter.Painter;
 
-public abstract class Node {
+import java.util.HashSet;
+import java.util.Set;
+
+public abstract class Node implements CSSStylable {
 	private int m_x = 0;
 	private int m_y = 0;
+	
+	private String m_id = null;
+	private HashSet<String> m_classes = new HashSet<String>();
+	
+	protected CSSStyler m_styler = new CSSStyler();
+	
+	private Parent m_parent = null;
 	
 	private int m_width = 0;
 	private int m_height = 0;
@@ -24,11 +34,29 @@ public abstract class Node {
 	public Dimension getMinimumSize() { return m_minimumSize; }
 	public Dimension getMaximumSize() { return m_maximumSize; }
 	
+	public Parent getParent() { return m_parent; } 
+	
+	public String getID() { return m_id; }
+	public Set<String> getClasses() { return m_classes; }
+	
+	public void setParent(Parent parent) { m_parent = parent; }
+	
 	public void setBounds(int x, int y, int width, int height) {
 		m_x = x;
 		m_y = y;
 		m_width = width;
 		m_height = height;
+	}
+	
+	public void setID(String id) {
+		m_id = id;
+	}
+	public void addClass(String clazz) {
+		m_classes.add(clazz);
+	}
+	
+	public void setStyle(String style, String value) {
+		m_styler.setStyle(style, value);
 	}
 	
 	/**

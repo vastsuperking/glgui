@@ -9,11 +9,31 @@ public class BorderPane extends Pane {
 	
 	private Node m_center = null;
 	
-	public void setTop(Node top) { m_top = top; }
-	public void setBottom(Node bottom) { m_top = bottom; }
-	public void setCenter(Node center) { m_top = center; }
-	public void setLeft(Node left) { m_top = left; }
-	public void setRight(Node right) { m_top = right; }
+	public void setTop(Node top) {
+		if (m_top != null) removeChild(m_top);
+		m_top = top;
+		addChild(top);
+	}
+	public void setBottom(Node bottom) {
+		if (m_bottom != null) removeChild(m_bottom);
+		m_bottom = bottom;
+		addChild(bottom);
+	}
+	public void setCenter(Node center) {
+		if (m_center != null) removeChild(m_center);
+		m_center = center;
+		addChild(m_center);
+	}
+	public void setLeft(Node left) {
+		if (m_left != null) removeChild(m_left);
+		m_left = left;
+		addChild(m_left);
+	}
+	public void setRight(Node right) {
+		if (m_right != null) removeChild(m_right);
+		m_right = right;	
+		addChild(m_right);
+	}
 	
 	public void validate() {
 		//Vars for the size of the center

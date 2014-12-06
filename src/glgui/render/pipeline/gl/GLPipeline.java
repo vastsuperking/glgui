@@ -18,7 +18,7 @@ public class GLPipeline implements Pipeline {
 		m_gl = window.getGLWindow().getGL();
 		//Make the context current to set up the painter
 		m_gl.makeCurrent();
-		m_painter = new GLPainter(m_gl, this);
+		m_painter = new GLPainter(m_gl);
 		
 		m_painter.updateProjection(m_window.getGLWindow().getWidth(), m_window.getGLWindow().getHeight());
 

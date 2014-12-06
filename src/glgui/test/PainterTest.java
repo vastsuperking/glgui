@@ -1,10 +1,10 @@
 package glgui.test;
 
 import glcommon.Color;
+import glcommon.image.Image2D;
 import glcommon.image.ImageIO;
 import glcommon.util.ResourceLocator.ClasspathResourceLocator;
 import glgui.painter.Painter;
-import glgui.painter.Texture;
 import glgui.render.pipeline.Pipeline;
 import glgui.render.pipeline.gl.GLWindow;
 
@@ -24,8 +24,7 @@ public class PainterTest {
 		
 		
 		InputStream in = new ClasspathResourceLocator().getResource(IMAGE);
-		Texture t = new Texture(ImageIO.s_read(in));
-		
+		Image2D image = ImageIO.s_read(in);
 		while (!window.getGLWindow().closeRequested()) {
 			pipeline.startRendering();
 			Painter painter = pipeline.getPainter();
@@ -41,11 +40,11 @@ public class PainterTest {
 			
 			painter.scale(2, 2);
 			painter.translate(-50, -50);
-			painter.drawTexture(t, 0, 0, 100, 100);
+			painter.drawImage(image, 0, 0, 100, 100);
 			
 			pipeline.stopRendering();
 		}
-		t.delete();
+		image.destroyInstances();
 		
 		window.dispose();
 	}

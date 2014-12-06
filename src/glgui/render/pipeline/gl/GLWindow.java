@@ -135,7 +135,11 @@ public class GLWindow implements PWindow {
 	public boolean isInitialized() {
 		return m_window.isInitialized();
 	}
-
+	@Override
+	public boolean closeRequested() {
+		return m_window.closeRequested();
+	}
+	
 	public Window getGLWindow() { return m_window; }
 	
 	@Override

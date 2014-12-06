@@ -2,7 +2,6 @@ package glgui.gui.window;
 
 import glgui.gui.BorderPane;
 import glgui.gui.Pane;
-import glgui.gui.RenderThread;
 import glgui.painter.Painter;
 import glgui.render.pipeline.PWindow;
 import glgui.render.pipeline.PWindowProvider;
@@ -12,10 +11,13 @@ public class Window {
 	private PWindow m_window;
 	private boolean m_initialized;
 	
-	private Pane m_contentPane = new BorderPane();
+	private BorderPane m_contentPane = new BorderPane();
 	
 	public Window() {
 		m_window = PWindowProvider.getDefaultProvider().create();
+	}
+	protected PWindow getImp() {
+		return m_window;
 	}
 	public String getName() {
 		checkValid();
@@ -27,6 +29,10 @@ public class Window {
 	public int getHeight() {
 		return m_window.getHeight();
 	}
+	public BorderPane getContentPane() {
+		return m_contentPane;
+	}
+	
 	public boolean isVisible() {
 		return m_window.isVisible();
 	}
@@ -51,6 +57,19 @@ public class Window {
 		else if (wasVisible && !visible) RenderThread.getInstance().removeWindow(this);
 	}
 
+	public void addStateListener(WindowStateListener l) {
+		m_window.addStateListener(l);
+	}
+	public void addMoveListener(MoveListener l) {
+		m_window.addMoveListener(l);
+	}
+	public void addFileDropListener(FileDropListener l) {
+		m_window.addFileDropListener(l);
+	}
+	public void addResizedListener(ResizeListener l) {
+		m_window.addResizedListener(l);
+	}
+	
 	public void paint() {
 		Pipeline pipeline = m_window.getPipeline();
 		if (!m_initialized) {

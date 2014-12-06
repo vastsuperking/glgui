@@ -10,11 +10,11 @@ public interface PWindow extends PDisplay {
 	public String getName();
 	public boolean isVisible();
 	public boolean isInitialized();
+	public boolean closeRequested();
 	
 	public void setVisible(boolean visible);
 	public void setSize(int width, int height);	
 	
-	public void addResizedListener(ResizeListener l);
 	public void addStateListener(WindowStateListener l);
 	public void addMoveListener(MoveListener l);
 	public void addFileDropListener(FileDropListener l);

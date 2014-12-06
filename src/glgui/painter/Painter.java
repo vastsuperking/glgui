@@ -1,15 +1,16 @@
 package glgui.painter;
 
 import glcommon.Color;
+import glcommon.font.Font;
+import glcommon.image.Image2D;
 import glcommon.vector.Matrix3f;
-import glgui.render.pipeline.Pipeline;
 
 public interface Painter {
-	//Will return NULL if no pipeline(eg. drawing to an image)
-	public Pipeline getPipeline();
-
 	public void setColor(Color color);
 	public Color getColor();
+	
+	public void setFont(Font font);
+	public Font getFont();
 
 	public Matrix3f getTransform();
 	public void setTransform(Matrix3f mat);
@@ -30,9 +31,11 @@ public interface Painter {
 	public void fillRect(float x, float y, float width, float height);
 	public void fillPolygon(float x[], float y[]);
 
-	public void drawTexture(Texture t, float x, float y, float width, float height);
-	public void drawTexture(Texture t, float x, float y, float width, float height,
+	public void drawImage(Image2D t, float x, float y, float width, float height);
+	public void drawImage(Image2D t, float x, float y, float width, float height,
 									   float rx, float ry);
+	
+	public void drawString(String string, float x, float y, float scale);
 	
 	public void dispose();
 }

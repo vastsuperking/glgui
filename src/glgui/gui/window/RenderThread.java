@@ -1,8 +1,7 @@
-package glgui.gui;
-
-import glgui.gui.window.Window;
+package glgui.gui.window;
 
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class RenderThread implements Runnable {
 	private static RenderThread s_instance;
@@ -25,7 +24,9 @@ public class RenderThread implements Runnable {
 	}
 	public void removeWindow(Window window) {
 		synchronized(m_windows) {
-			m_windows.remove(window);
+			if (m_windows.contains(window)) {
+				m_windows.remove(window);
+			}
 			
 			if (m_windows.size() < 1 && m_thread.isAlive()) {
 				m_thread.interrupt();
@@ -36,8 +37,18 @@ public class RenderThread implements Runnable {
 	public void run() {
 		while (true) {
 			synchronized(m_windows) {
-				for (Window w : m_windows) {
-					if (w.isInitialized()) w.paint();
+				Iterator<Window> it = m_windows.iterator();
+				while (it.hasNext()) {
+					Window w = it.next();
+					if (w.isInitialized()) {
+						if (w.getImp().closeRequested()) {
+							//Remove it from the list before it has a chance to
+							it.remove();
+							w.dispose();
+						} else {
+							w.paint();
+						}
+					}
 				}
 			}
 			if (Thread.interrupted()) break;
