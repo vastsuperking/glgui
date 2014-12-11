@@ -13,6 +13,7 @@ import glextra.material.Material;
 import glextra.material.MaterialXMLLoader;
 import glextra.renderer.GLTextureManager;
 import glgui.painter.Painter;
+import glgui.painter.graphic.Gradient;
 import gltools.Mode;
 import gltools.buffer.AttribArray;
 import gltools.buffer.ColorBuffer;
@@ -22,7 +23,9 @@ import gltools.buffer.VertexBuffer;
 import gltools.gl.GL;
 import gltools.gl.GL1;
 import gltools.shader.InputUsage;
+import gltools.shader.Program;
 import gltools.shader.Program.ProgramLinkException;
+import gltools.shader.ProgramXMLLoader;
 import gltools.shader.Shader.ShaderCompileException;
 import gltools.texture.Texture2D;
 import gltools.util.GLMatrix3f;
@@ -31,6 +34,7 @@ import java.io.IOException;
 
 public class GLPainter implements Painter {
 	private static final String MATERIAL = "Materials/M2D/gui.mat";
+	private static final String GRADIENT_PROGRAM = "Programs/Painter/linear_gradient.prog";
 	
 	private GL m_gl;
 
@@ -48,6 +52,8 @@ public class GLPainter implements Painter {
 	
 	private GLTextureManager m_textureManager;
 	
+	private Program m_gradient;
+	
 	private Material m_material;
 	
 	//Make another instance of material so we
@@ -61,8 +67,8 @@ public class GLPainter implements Painter {
 		
 		m_textureManager = new GLTextureManager();
 		
-		m_modelMat = new GLMatrix3f();
-		m_projMat = new GLMatrix3f();
+		m_modelMat = new GLMatrix3f(InputUsage.MODEL_MATRIX_2D);
+		m_projMat = new GLMatrix3f(InputUsage.PROJECTION_MATRIX_2D);
 		
 		m_verticesBuf = new VertexBuffer();
 		m_texCoordsBuf = new VertexBuffer();
@@ -78,6 +84,8 @@ public class GLPainter implements Painter {
 		try {
 			m_material = MaterialXMLLoader.s_load(gl, MATERIAL, new ClasspathResourceLocator()).get(0);
 			m_materialTextured = MaterialXMLLoader.s_load(gl, MATERIAL, new ClasspathResourceLocator()).get(0);
+			
+			m_gradient = ProgramXMLLoader.s_load(gl, GRADIENT_PROGRAM, new ClasspathResourceLocator()).get(0);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ShaderCompileException e) {
@@ -192,8 +200,6 @@ public class GLPainter implements Painter {
 
 	@Override
 	public void drawRect(float x, float y, float width, float height) {
-		m_material.bind(m_gl, m_globals);
-		
 		//For bottom left origin
 		float vertices[] = {x + width, y + height,
 							 x, y + height,
@@ -209,6 +215,7 @@ public class GLPainter implements Painter {
 		m_indicesBuf.setValues(m_gl.getGL1(), indices);
 		m_indicesBuf.unbind(m_gl.getGL1());
 		
+		
 		Geometry geo = new Geometry();
 		geo.addArray(new AttribArray(m_verticesBuf, InputUsage.VERTEX_POSITION_2D, 0, 0));
 		geo.setVertexCount(indices.length);
@@ -218,6 +225,7 @@ public class GLPainter implements Painter {
 		geo.render(m_gl.getGL2());
 		
 		m_material.unbind(m_gl);
+
 	}
 
 	@Override
@@ -233,6 +241,55 @@ public class GLPainter implements Painter {
 	public void fillPolygon(float[] x, float[] y) {
 		throw new UnsupportedOperationException();
 	}	
+	
+	@Override
+	public void fillGradient(Gradient g, float x, float y, float width, float height) {
+		Color a = g.getColorA();
+		Color b = g.getColorB();
+		
+		m_gradient.bind(m_gl);
+		
+		m_projMat.load(m_gl);
+		m_modelMat.load(m_gl);
+		
+		float vertices[] = {x + width, y + height,
+				x, y + height,
+				x, y,
+				x + width, y };
+		float colors[] = {  
+				a.getRed(), a.getGreen(), a.getBlue(), a.getAlpha(),
+				a.getRed(), a.getGreen(), a.getBlue(), a.getAlpha(),
+				b.getRed(), b.getGreen(), b.getBlue(), b.getAlpha(),
+				b.getRed(), b.getGreen(), b.getBlue(), b.getAlpha() };
+		
+		int indices[] = {0, 1, 2, 0, 2, 3};
+
+		m_verticesBuf.bind(m_gl);
+		m_verticesBuf.setValues(m_gl, vertices);
+		m_verticesBuf.unbind(m_gl);
+
+		m_indicesBuf.bind(m_gl.getGL1());
+		m_indicesBuf.setValues(m_gl.getGL1(), indices);
+		m_indicesBuf.unbind(m_gl.getGL1());
+		
+		VertexBuffer colorBuffer = new VertexBuffer();
+		colorBuffer.init(m_gl);
+		colorBuffer.bind(m_gl);
+		colorBuffer.setValues(m_gl, colors);
+		colorBuffer.unbind(m_gl);
+
+		Geometry geo = new Geometry();
+		geo.addArray(new AttribArray(m_verticesBuf, InputUsage.VERTEX_POSITION_2D, 0, 0));
+		geo.addArray(new AttribArray(colorBuffer, InputUsage.VERTEX_COLOR, 0, 0));
+		geo.setVertexCount(indices.length);
+		geo.setMode(Mode.TRIANGLES);
+		geo.setIndexBuffer(m_indicesBuf);
+		geo.render(m_gl);
+		
+		colorBuffer.delete(m_gl);
+		
+		m_gradient.unbind(m_gl);
+	}
 	
 	@Override
 	public void drawImage(Image2D i, float x, float y, float width, float height) {

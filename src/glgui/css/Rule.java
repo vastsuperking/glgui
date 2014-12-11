@@ -1,25 +1,37 @@
 package glgui.css;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class Rule {
-	private SelectorSet m_selectors;
+	private Selectors m_selectors;
 	
-	private HashMap<String, String> m_parameters = new HashMap<String, String>();
+	private LinkedHashMap<String, CSSDeclaration> m_declarations = new LinkedHashMap<String, CSSDeclaration>();
 	
 	public Rule() {
-		m_selectors = new SelectorSet();
+		m_selectors = new Selectors();
 	}
-	public Rule(SelectorSet set) {
+	public Rule(Selectors set) {
 		m_selectors = set;
 	}
-	public SelectorSet getSelectors() { return m_selectors; }
-	public HashMap<String, String> getParameters() { return m_parameters; }
+	public Selectors getSelectors() { return m_selectors; }
+	public LinkedHashMap<String, CSSDeclaration> getDeclarations() { return m_declarations; }
 	
-	public void setParameter(String param, String value) {
-		m_parameters.put(param, value);
+	public void addDeclaration(CSSDeclaration declaration) {
+		m_declarations.put(declaration.getName(), declaration);
 	}
-	public void setAllParameters(Rule rule) {
-		m_parameters.putAll(rule.getParameters());
+	
+	public void inheritFrom(Rule rule) {
+		m_declarations.putAll(rule.getDeclarations());
+	}
+	
+	public boolean canInheritFrom(Rule rule) {
+		return m_selectors.canInheritFrom(rule.getSelectors());
+	}
+	
+	public boolean appliesTo(CSSNode node) {
+		return m_selectors.appliesTo(node);
+	}
+	public boolean appliesToWithoutStates(CSSNode node) {
+		return m_selectors.appliesToWithoutStates(node);
 	}
 }

@@ -5,6 +5,8 @@ public class Constants {
 	public static final char NEW_LINE = '\n';
 	public static final char TAB = '\t';
 	
+	public static final char COMMA = ',';
+	
 	public static final char BRACES_BEG = '{';
 	public static final char BRACES_END = '}';
 	

@@ -15,6 +15,14 @@ public class Window {
 	
 	public Window() {
 		m_window = PWindowProvider.getDefaultProvider().create();
+		m_window.addResizedListener(new ResizeListener() {
+			@Override
+			public void onResize(int width, int height) {
+				m_contentPane.setWidth(width);
+				m_contentPane.setHeight(height);
+				m_contentPane.revalidate();
+			}
+		});
 	}
 	protected PWindow getImp() {
 		return m_window;

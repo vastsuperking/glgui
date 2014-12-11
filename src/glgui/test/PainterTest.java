@@ -5,6 +5,8 @@ import glcommon.image.Image2D;
 import glcommon.image.ImageIO;
 import glcommon.util.ResourceLocator.ClasspathResourceLocator;
 import glgui.painter.Painter;
+import glgui.painter.graphic.Gradient;
+import glgui.painter.graphic.Gradient.GradientDirection;
 import glgui.render.pipeline.Pipeline;
 import glgui.render.pipeline.gl.GLWindow;
 
@@ -18,6 +20,8 @@ public class PainterTest {
 		window.setVisible(true);
 		window.setName("Painter Test");
 		window.setSize(1024, 1024);
+		
+		Gradient g = new Gradient(GradientDirection.VERTICAL, Color.BLUE, Color.RED);
 		
 		Pipeline pipeline = window.getPipeline();
 		pipeline.init();
@@ -37,10 +41,12 @@ public class PainterTest {
 			
 			
 			painter.setColor(Color.WHITE);
+			g.paint(painter, 100, 100, 1000, 1000);
 			
 			painter.scale(2, 2);
 			painter.translate(-50, -50);
 			painter.drawImage(image, 0, 0, 100, 100);
+			
 			
 			pipeline.stopRendering();
 		}

@@ -1,26 +1,7 @@
-foo {
-	/*
-	 * Just testing commenting
-	 */
-	life : 10;
-	width: 100;
-	height: 300;
+Button {
+	text-color : red;
+	background : vertical-gradient(red, black);
 }
-.bar {
-	/*
-	 * Just testing commenting
-	 */
-	size: 10;
-	color: 100;
-	foo {
-		.title {
-			width: 200;
-			/*
-			 * Just testing commenting
-			 */
-		}
-	}
-}
-foo {
-	run: true;
+#foo {
+	text-color : blue;
 }

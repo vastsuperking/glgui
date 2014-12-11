@@ -4,6 +4,7 @@ import glcommon.Color;
 import glcommon.font.Font;
 import glcommon.image.Image2D;
 import glcommon.vector.Matrix3f;
+import glgui.painter.graphic.Gradient;
 
 public interface Painter {
 	public void setColor(Color color);
@@ -31,9 +32,13 @@ public interface Painter {
 	public void fillRect(float x, float y, float width, float height);
 	public void fillPolygon(float x[], float y[]);
 
+	//Will draw a gradient
+	public void fillGradient(Gradient g, float x, float y, float width, float height);
+
 	public void drawImage(Image2D t, float x, float y, float width, float height);
 	public void drawImage(Image2D t, float x, float y, float width, float height,
 									   float rx, float ry);
+	
 	
 	public void drawString(String string, float x, float y, float scale);
 	
