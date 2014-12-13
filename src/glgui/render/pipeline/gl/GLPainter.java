@@ -10,6 +10,7 @@ import glcommon.vector.MatrixUtils;
 import glcommon.vector.Vector2f;
 import glextra.material.GlobalParamBindingSet;
 import glextra.renderer.GLTextureManager;
+import glgui.painter.ImagePaint;
 import glgui.painter.Paint;
 import glgui.painter.Painter;
 import gltools.Mode;
@@ -97,7 +98,7 @@ public class GLPainter implements Painter {
 		if (m_paint != null)
 			m_paintManager.clearPaint(this, m_paint);
 		m_paint = paint;
-		m_paintManager.applyPaint(this, m_paint, m_modelMat, m_projMat);
+		if (paint != null) m_paintManager.applyPaint(this, m_paint, m_modelMat, m_projMat);
 	}
 	public Paint getPaint() { return m_paint; }
 	
@@ -483,6 +484,8 @@ public class GLPainter implements Painter {
 		//The font we will be using
 		if (font == null) throw new RuntimeException("No font set!");
 		if (string == null || string.equals("")) return;
+
+		m_paintManager.enterTextMode(this, m_paint);
 		
 		//First, push the transformation matrix
 		pushTransform();
@@ -495,8 +498,13 @@ public class GLPainter implements Painter {
 			
 			//Translate across the xoffset and down by the yoffset
 			Image2D image = g.getImage();
-			//Material is already set...
-			//TODO: Reimplement
+			
+			m_paintManager.setTextGlyph(this, m_paint, image);
+			
+			fillRect(scale * g.getXOff(), scale * (g.getYOff()), 
+					 scale * image.getWidth(), 
+					 scale * image.getHeight());
+
 			/*drawImage(image, scale * g.getXOff(), scale * (g.getYOff()), 
 						scale * image.getWidth(), 
 						scale * image.getHeight());*/
@@ -505,6 +513,9 @@ public class GLPainter implements Painter {
 		
 		//Pop it to get back to what we had before
 		popTransform();
+		
+		m_paintManager.exitTextMode(this, m_paint);
+		
 	}
 	
 	@Override

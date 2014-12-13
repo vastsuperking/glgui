@@ -9,7 +9,7 @@ import glgui.painter.Painter;
 import java.awt.Rectangle;
 
 public class Button extends Widget {
-	private static final Font s_defaultFont =
+	public static final Font s_defaultFont =
 		JavaFontConverter.s_convert(new java.awt.Font("Serif", java.awt.Font.PLAIN, 100));
 	
 	private String m_text;
@@ -49,11 +49,8 @@ public class Button extends Widget {
 	
 	@Override
 	public void paintWidget(Painter p) {
-		p.setFont(m_font);
-		p.setColor(m_textColor);
 		Rectangle rect = m_font.getBounds(m_text);
-		p.drawString(m_text, getWidth() / 2f - (float) rect.getWidth() / 2, 
+		p.drawString(m_text, m_font, getWidth() / 2f - (float) rect.getWidth() / 2, 
 				             getHeight() / 2f - (float) rect.getHeight() / 2, 1);
-		p.setFont(null);
 	}
 }

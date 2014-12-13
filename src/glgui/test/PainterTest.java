@@ -4,10 +4,13 @@ import glcommon.Color;
 import glcommon.image.Image2D;
 import glcommon.image.ImageIO;
 import glcommon.util.ResourceLocator.ClasspathResourceLocator;
+import glgui.gui.Button;
 import glgui.painter.ImagePaint;
 import glgui.painter.LinearGradientPaint;
+import glgui.painter.LinearGradientPaint.ColorStop;
+import glgui.painter.LinearGradientPaint.Direction;
+import glgui.painter.Paint;
 import glgui.painter.Painter;
-import glgui.painter.graphic.Gradient.GradientDirection;
 import glgui.render.pipeline.Pipeline;
 import glgui.render.pipeline.gl.GLWindow;
 
@@ -29,14 +32,20 @@ public class PainterTest {
 		
 		InputStream in = new ClasspathResourceLocator().getResource(IMAGE);
 		Image2D image = ImageIO.s_read(in);
+		
+		Paint p = new LinearGradientPaint(Direction.VERTICAL, new ColorStop(Color.WHITE, 0.1f), 
+				 						  new ColorStop(Color.RED, 0.1f),
+				 						  new ColorStop(Color.BLUE, 0.3f),
+				 						  new ColorStop(Color.YELLOW, 0.5f));
+		
 		while (!window.getGLWindow().closeRequested()) {
 			pipeline.startRendering();
 			Painter painter = pipeline.getPainter();
-			painter.setPaint(new ImagePaint(image));
+			//painter.setPaint(new ImagePaint(image));
 
-			painter.fillRect(0, 0, 1024, 1024);
+			//painter.fillRect(0, 0, 2048, 2048);
 			
-			painter.setPaint(new LinearGradientPaint(GradientDirection.VERTICAL, Color.BLACK, Color.RED, Color.YELLOW));
+			painter.setPaint(p);
 			painter.pushTransform();
 			painter.scale(3, 3);
 			painter.popTransform();
@@ -50,11 +59,14 @@ public class PainterTest {
 			//				0, (float) -(0.5 * Math.PI));
 			//painter.fillElipse(500, 500, 500, 500, 100, -0.5f, 0.5f, 0.5f, 0.5f);
 			//painter.fillRoundedRect(0, 0, 1000, 1000, 100, 10, 0, 0, 1, 1);
-			painter.fillRoundedRect(0, 0, 1100, 1100, 50, 400);
-			painter.scale(2, 2);
-			painter.translate(-50, -50);
-			//painter.drawImage(image, 0, 0, 100, 100);
+			painter.drawString("Foo", Button.s_defaultFont, 0, 600, 1);
 			
+			painter.fillRoundedRect(0, 0, 500, 500, 50, 50);
+			
+			painter.setPaint(new ImagePaint(image));
+			painter.drawString("Foobar", Button.s_defaultFont, 0, 700, 1);
+
+
 			
 			pipeline.stopRendering();
 			try {

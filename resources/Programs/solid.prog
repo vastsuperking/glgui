@@ -1,6 +1,6 @@
 <program>
   <shaders>
-    <vertex-shader resource="Programs/solid.vert"/>
+    <vertex-shader resource="Programs/default.vert"/>
     <fragment-shader resource="Programs/solid.frag"/>
   </shaders>
 

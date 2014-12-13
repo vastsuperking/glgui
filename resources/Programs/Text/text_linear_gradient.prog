@@ -1,13 +1,14 @@
 <program>
   <shaders>
     <vertex-shader resource="Programs/texCoords.vert"/>
-    <fragment-shader resource="Programs/linear_gradient.frag"/>
+    <fragment-shader resource="Programs/Text/text_linear_gradient.frag"/>
   </shaders>
 
   <uniforms>
   	<uniform name="modelMat" usage="MODEL_MATRIX" type="MAT3"/>
     <uniform name="projMat" usage="PROJECTION_MATRIX" type="MAT3"/>
     
+	<uniform name="glyphSampler" usage="GLYPH_SAMPLER" type="SAMPLER2D"/>
 	<uniform name="diffuseSampler" usage="GRADIENT_SAMPLER" type="SAMPLER2D"/>
   </uniforms>
 

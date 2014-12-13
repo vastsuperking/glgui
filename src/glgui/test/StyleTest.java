@@ -8,8 +8,8 @@ import glgui.gui.BorderPane;
 import glgui.gui.Button;
 import glgui.gui.window.Window;
 import glgui.gui.window.WindowStateListener;
-import glgui.painter.graphic.Gradient;
-import glgui.painter.graphic.Gradient.GradientDirection;
+import glgui.painter.LinearGradientPaint;
+import glgui.painter.LinearGradientPaint.Direction;
 import glgui.render.pipeline.gl.GLWindowProvider;
 
 import java.io.IOException;
@@ -27,7 +27,7 @@ public class StyleTest {
 			public Object execute(Object... args) {
 				Color a = (Color) args[0];
 				Color b = (Color) args[1];
-				return new Gradient(GradientDirection.VERTICAL, a, b);
+				return new LinearGradientPaint(Direction.VERTICAL, a, b);
 			}			
 		});
 		ss.getParser().getEvaluator().addFunction(new CSSFunction("horizontal-gradient", Color.class, Color.class) {
@@ -35,7 +35,7 @@ public class StyleTest {
 			public Object execute(Object... args) {
 				Color a = (Color) args[0];
 				Color b = (Color) args[1];
-				return new Gradient(GradientDirection.HORIZONTAL, a, b);
+				return new LinearGradientPaint(Direction.HORIZONTAL, a, b);
 			}			
 		});
 		try {

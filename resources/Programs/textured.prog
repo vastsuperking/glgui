@@ -1,6 +1,6 @@
 <program>
   <shaders>
-    <vertex-shader resource="Programs/textured.vert"/>
+    <vertex-shader resource="Programs/texCoords.vert"/>
     <fragment-shader resource="Programs/textured.frag"/>
   </shaders>
 
