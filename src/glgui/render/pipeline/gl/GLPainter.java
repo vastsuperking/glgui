@@ -1,19 +1,17 @@
 package glgui.render.pipeline.gl;
 
-import glcommon.Color;
+import glcommon.BufferUtils;
 import glcommon.font.Font;
 import glcommon.font.Font.Glyph;
 import glcommon.image.Image2D;
-import glcommon.util.ResourceLocator.ClasspathResourceLocator;
 import glcommon.vector.Matrix3f;
 import glcommon.vector.MatrixFactory;
+import glcommon.vector.MatrixUtils;
 import glcommon.vector.Vector2f;
 import glextra.material.GlobalParamBindingSet;
-import glextra.material.Material;
-import glextra.material.MaterialXMLLoader;
 import glextra.renderer.GLTextureManager;
+import glgui.painter.Paint;
 import glgui.painter.Painter;
-import glgui.painter.graphic.Gradient;
 import gltools.Mode;
 import gltools.buffer.AttribArray;
 import gltools.buffer.ColorBuffer;
@@ -23,19 +21,11 @@ import gltools.buffer.VertexBuffer;
 import gltools.gl.GL;
 import gltools.gl.GL1;
 import gltools.shader.InputUsage;
-import gltools.shader.Program;
-import gltools.shader.Program.ProgramLinkException;
-import gltools.shader.ProgramXMLLoader;
-import gltools.shader.Shader.ShaderCompileException;
-import gltools.texture.Texture2D;
 import gltools.util.GLMatrix3f;
 
-import java.io.IOException;
+import java.nio.FloatBuffer;
 
-public class GLPainter implements Painter {
-	private static final String MATERIAL = "Materials/M2D/gui.mat";
-	private static final String GRADIENT_PROGRAM = "Programs/Painter/linear_gradient.prog";
-	
+public class GLPainter implements Painter {	
 	private GL m_gl;
 
 	public GLMatrix3f m_modelMat;
@@ -46,26 +36,19 @@ public class GLPainter implements Painter {
 	private IndexBuffer m_indicesBuf;
 	
 	private GlobalParamBindingSet m_globals = new GlobalParamBindingSet();
-	
-	private Color m_color = Color.BLACK;
-	private Font m_font = null;
+
+	private Paint m_paint = null;
 	
 	private GLTextureManager m_textureManager;
-	
-	private Program m_gradient;
-	
-	private Material m_material;
-	
-	//Make another instance of material so we
-	//are not always switching between
-	//non-textured and textured program
-	//and don't have to recompile every time we switch
-	private Material m_materialTextured;
+	private GLPaintManager m_paintManager;
 	
 	public GLPainter(GL gl) {
 		m_gl = gl;
 		
 		m_textureManager = new GLTextureManager();
+		m_paintManager = new GLPaintManager();
+		
+		m_paintManager.init();
 		
 		m_modelMat = new GLMatrix3f(InputUsage.MODEL_MATRIX_2D);
 		m_projMat = new GLMatrix3f(InputUsage.PROJECTION_MATRIX_2D);
@@ -80,23 +63,10 @@ public class GLPainter implements Painter {
 		
 		m_globals.addParam(InputUsage.MODEL_MATRIX_2D, m_modelMat);
 		m_globals.addParam(InputUsage.PROJECTION_MATRIX_2D, m_projMat);
-		
-		try {
-			m_material = MaterialXMLLoader.s_load(gl, MATERIAL, new ClasspathResourceLocator()).get(0);
-			m_materialTextured = MaterialXMLLoader.s_load(gl, MATERIAL, new ClasspathResourceLocator()).get(0);
-			
-			m_gradient = ProgramXMLLoader.s_load(gl, GRADIENT_PROGRAM, new ClasspathResourceLocator()).get(0);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ShaderCompileException e) {
-			e.printStackTrace();
-		} catch (ProgramLinkException e) {
-			e.printStackTrace();
-		}
-		m_material.selectTechnique();
-		m_materialTextured.selectTechnique();
 	}
 	
+	public GL getGL() { return m_gl; }
+
 	//Functions for GLPipeline
 	
 	public void start() {
@@ -115,26 +85,31 @@ public class GLPainter implements Painter {
 		m_projMat.setCurrentMatrix(
 				MatrixFactory.createAffineProjectionMatrix(0, width, height, 0));
 	}
+	
+	//
+	
+	public GLTextureManager getTextureManager() { return m_textureManager; }
+	public GLPaintManager getPaintManager() { return m_paintManager; }
+	
+	//
 
-	public GL getGL() { return m_gl; }
-	
-	//Functions for Painter
-	@Override
-	public void setColor(Color color) {
-		m_material.setColor("color", color);
-		m_materialTextured.setColor("color", color);
-		m_color = color;
+	public void setPaint(Paint paint) {
+		if (m_paint != null)
+			m_paintManager.clearPaint(this, m_paint);
+		m_paint = paint;
+		m_paintManager.applyPaint(this, m_paint, m_modelMat, m_projMat);
 	}
-	@Override
-	public Color getColor() { return m_color; }
+	public Paint getPaint() { return m_paint; }
 	
-	@Override
-	public void setFont(Font font) {
-		m_font = font;
+
+	public Vector2f getTranslation() {
+		return MatrixUtils.getTranslation(m_modelMat.getCurrentMatrix());
 	}
-	@Override
-	public Font getFont() {
-		return m_font;
+	public Vector2f getScale() {
+		return MatrixUtils.getScale(m_modelMat.getCurrentMatrix());
+	}
+	public float getRotation() {
+		return MatrixUtils.getRotation(m_modelMat.getCurrentMatrix());
 	}
 	
 	@Override
@@ -174,8 +149,8 @@ public class GLPainter implements Painter {
 	
 	@Override
 	public void drawLine(float x1, float y1, float x2, float y2) {
-		m_material.bind(m_gl, m_globals);
-
+		m_paintManager.updateMats(this, m_paint, m_modelMat, m_projMat);
+		
 		float[] vertices = {x1, y1,
 				x2, x2};
 
@@ -190,7 +165,6 @@ public class GLPainter implements Painter {
 		geo.setMode(Mode.LINES);
 		geo.render(m_gl);
 		
-		m_material.unbind(m_gl);
 	}
 
 	@Override
@@ -200,6 +174,8 @@ public class GLPainter implements Painter {
 
 	@Override
 	public void drawRect(float x, float y, float width, float height) {
+		m_paintManager.updateMats(this, m_paint, m_modelMat, m_projMat);
+		
 		//For bottom left origin
 		float vertices[] = {x + width, y + height,
 							 x, y + height,
@@ -222,27 +198,190 @@ public class GLPainter implements Painter {
 		geo.setMode(Mode.LINES);
 		geo.setIndexBuffer(m_indicesBuf);
 		
-		geo.render(m_gl.getGL2());
-		
-		m_material.unbind(m_gl);
-
+		geo.render(m_gl.getGL2());		
+	}
+	
+	@Override
+	public void fillRect(float x, float y, float width, float height) {
+		fillRect(x, y, width, height, 0, 0, 1, 1);
 	}
 
 	@Override
-	public void fillRect(float x, float y, float width, float height) {
-		m_material.bind(m_gl, m_globals);
-
-		fillRectNoMaterial(x, y, width, height);
+	public void fillRect(float x, float y, float width, float height,
+						 float tx, float ty, float tw, float th) {
+		m_paintManager.updateMats(this, m_paint, m_modelMat, m_projMat);
 		
-		m_material.unbind(m_gl);
-	}
+		float vertices[] = {x + width, y + height,
+				x, y + height,
+				x, y,
+				x + width, y };
+		
+		float texCoords[] = {
+				tx + tw, ty + th,
+				tx, ty + th,
+				tx, ty,
+				tx + tw, ty};
+		int indices[] = {0, 1, 2, 0, 2, 3};
 
+		m_verticesBuf.bind(m_gl);
+		m_verticesBuf.setValues(m_gl, vertices);
+		m_verticesBuf.unbind(m_gl);
+
+		m_texCoordsBuf.bind(m_gl.getGL1());
+		m_texCoordsBuf.setValues(m_gl.getGL1(), texCoords);
+		m_texCoordsBuf.unbind(m_gl.getGL1());
+		
+		m_indicesBuf.bind(m_gl.getGL1());
+		m_indicesBuf.setValues(m_gl.getGL1(), indices);
+		m_indicesBuf.unbind(m_gl.getGL1());
+
+		Geometry geo = new Geometry();
+		geo.addArray(new AttribArray(m_verticesBuf, InputUsage.VERTEX_POSITION_2D, 0, 0));
+		geo.addArray(new AttribArray(m_texCoordsBuf, InputUsage.VERTEX_TEX_COORD, 0, 0));
+		geo.setVertexCount(indices.length);
+		geo.setMode(Mode.TRIANGLES);
+		geo.setIndexBuffer(m_indicesBuf);
+		geo.render(m_gl);
+	}
+	@Override
+	public void fillRoundedRect(float x, float y, float width, float height,
+								float radius, int resolution) {
+		fillRoundedRect(x, y, width, height, radius, resolution, 0, 0, 1, 1);
+	}
+	@Override
+	public void fillRoundedRect(float x, float y, float width, float height, 
+								float radius, int resolution,
+								float tx, float ty, float tw, float th) {
+		float radiusTw = tw * radius / width;
+		float radiusTh = tw * radius / width;
+		//Fill bottom left corner
+		fillArc(x + radius, y + radius, radius, radius, 
+				(float) (Math.PI), (float) (0.5 * Math.PI), resolution,
+				tx + radiusTw, ty + radiusTh, radiusTw, radiusTh);
+		//Fill bottom right corner
+		fillArc(x + width - radius, y + radius, radius, radius,
+				(float) (0.5 * Math.PI), (float) (0.5 * Math.PI), resolution,
+				tx + tw - radiusTw, ty + radiusTh, 
+				radiusTw, radiusTh);
+		
+		//Fill top left
+		fillArc(x + radius, y + height - radius, radius, radius,
+				0, (float) (-0.5 * Math.PI), resolution,
+				tx + radiusTw, ty + th - radiusTh,
+				radiusTw, radiusTh);
+		//Fill top right
+		fillArc(x + width - radius, y + height - radius, radius, radius,
+				0, (float) (0.5 * Math.PI), resolution,
+				tx + tw - radiusTw, ty + th - radiusTh,
+				radiusTw, radiusTh);
+		
+		//Draw rect inbetween bottom left and bottom right
+		fillRect(x + radius, y, width - 2 * radius, radius,
+				 tx + radiusTw, ty, 
+				 tw - 2 * radiusTw, radiusTh);
+		
+		//Draw rect inbetween top left and top right
+		fillRect(x + radius, y + height - radius, width - 2 * radius, radius,
+				 tx + radiusTw, ty + th - radiusTh, 
+				 tw - 2 * radiusTw, radiusTh);
+		
+		//Draw rect spanning the width of the middle
+		fillRect(x, y + radius, width, height - 2  * radius,
+				 tx, ty + radiusTh, tw, th - 2 * radiusTh);
+		
+	}
+	@Override
+	public void fillArc(float x, float y, float radius, float smRadius, float startRads, float rads) {
+		fillArc(x, y, radius, smRadius, startRads, rads, (int) ( getScale().scale(new Vector2f(radius, smRadius)).length() / 10 ));
+	}
+	public void fillArc(float x, float y, float radius, float smRadius, 
+			float startRads, float rads, int resolution) {
+		fillArc(x, y, radius, smRadius, startRads, rads, resolution, 0, 0, 1, 1);
+	}
+	@Override
+	public void fillArc(float x, float y, float radius, float smRadius, 
+						float startRads, float rads, int resolution,
+						float tx, float ty, float tw, float th) {
+		if (resolution < 1) resolution = 1;
+		
+		m_paintManager.updateMats(this, m_paint, m_modelMat, m_projMat);
+		// + 2 for starting and ending points
+		FloatBuffer verts = BufferUtils.createFloatBuffer((resolution + 2) * 2);
+		FloatBuffer texCoords = BufferUtils.createFloatBuffer((resolution + 2) * 2);
+		//Put origin coord
+		verts.put(x).put(y);
+		texCoords.put(tx).put(ty);
+		
+		//Divide the equivalent of 90 deg by number of steps
+		float step = rads / (float) resolution;
+		//Current angle to eval the curve for, in radians
+		float angle = startRads;
+		
+		for (int i = 0; i < resolution + 1; i++) {
+			float s = (float) Math.sin(angle);
+			float c = (float) Math.cos(angle);
+			
+			float vX = x + s * smRadius;
+			float vY = y + c * radius;
+			
+			float tcX = tx + s * tw;
+			float tcY = ty + c * th;
+			verts.put(vX).put(vY);
+			texCoords.put(tcX).put(tcY);
+			angle += step;
+		}
+		verts.flip();
+		texCoords.flip();
+		
+		m_verticesBuf.bind(m_gl);
+		m_verticesBuf.bufferData(m_gl, verts);
+		m_verticesBuf.unbind(m_gl);
+
+		m_texCoordsBuf.bind(m_gl.getGL1());
+		m_texCoordsBuf.bufferData(m_gl.getGL1(), texCoords);
+		m_texCoordsBuf.unbind(m_gl.getGL1());
+		
+		Geometry geo = new Geometry();
+		geo.addArray(new AttribArray(m_verticesBuf, InputUsage.VERTEX_POSITION_2D, 0, 0));
+		geo.addArray(new AttribArray(m_texCoordsBuf, InputUsage.VERTEX_TEX_COORD, 0, 0));
+		geo.setMode(Mode.TRIANGLE_FAN);
+		geo.setVertexCount(resolution + 2);
+		geo.render(m_gl);
+	}
+	public void fillElipse(float x, float y, float radius, float smRadius) {
+		fillArc(x, y, radius, smRadius, 0, (float) (2 * Math.PI));
+	}
+	public void fillElipse(float x, float y, float radius, float smRadius, int resolution) {
+		fillArc(x, y, radius, smRadius, 0, (float) (2 * Math.PI), resolution);
+	}
+	public void fillElipse(float x, float y, float radius, float smRadius, int resolution,
+						   float tx, float ty, float th, float tw) {
+		fillArc(x, y, radius, smRadius, 0, (float) (2 * Math.PI), resolution, tx, ty, th, tw);
+	}
+	
 	@Override
 	public void fillPolygon(float[] x, float[] y) {
 		throw new UnsupportedOperationException();
+	}
+	//pos and texCoords should be flipped!!
+	public void fillPolygon(FloatBuffer pos, FloatBuffer texCoords) {
+		m_paintManager.updateMats(this, m_paint, m_modelMat, m_projMat);
+		
+		m_verticesBuf.bind(m_gl);
+		m_verticesBuf.bufferData(m_gl, pos);
+		m_verticesBuf.unbind(m_gl);
+
+		m_texCoordsBuf.bind(m_gl.getGL1());
+		m_texCoordsBuf.bufferData(m_gl.getGL1(), texCoords);
+		m_texCoordsBuf.unbind(m_gl.getGL1());
+		
+		Geometry geo = new Geometry();
+		geo.addArray(new AttribArray(m_verticesBuf, InputUsage.VERTEX_POSITION_2D, 0, 0));
+		geo.addArray(new AttribArray(m_texCoordsBuf, InputUsage.VERTEX_TEX_COORD, 0, 0));
+		geo.setMode(Mode.TRIANGLES);
+		geo.render(m_gl);
 	}	
-	
-	@Override
+	/*@Override
 	public void fillGradient(Gradient g, float x, float y, float width, float height) {
 		Color a = g.getColorA();
 		Color b = g.getColorB();
@@ -337,12 +476,11 @@ public class GLPainter implements Painter {
 
 		
 		m_materialTextured.unbind(m_gl);
-	}
+	}*/
 	
 	@Override
-	public void drawString(String string, float x, float y, float scale) {
+	public void drawString(String string, Font font, float x, float y, float scale) {
 		//The font we will be using
-		Font font = getFont();
 		if (font == null) throw new RuntimeException("No font set!");
 		if (string == null || string.equals("")) return;
 		
@@ -358,9 +496,10 @@ public class GLPainter implements Painter {
 			//Translate across the xoffset and down by the yoffset
 			Image2D image = g.getImage();
 			//Material is already set...
-			drawImage(image, scale * g.getXOff(), scale * (g.getYOff()), 
+			//TODO: Reimplement
+			/*drawImage(image, scale * g.getXOff(), scale * (g.getYOff()), 
 						scale * image.getWidth(), 
-						scale * image.getHeight());
+						scale * image.getHeight());*/
 			translate(g.getXAdvance() * scale, 0);
 		}
 		
@@ -370,27 +509,4 @@ public class GLPainter implements Painter {
 	
 	@Override
 	public void dispose() {}
-	
-	private void fillRectNoMaterial(float x, float y, float width, float height) {
-		float vertices[] = {x + width, y + height,
-				x, y + height,
-				x, y,
-				x + width, y };
-		int indices[] = {0, 1, 2, 0, 2, 3};
-
-		m_verticesBuf.bind(m_gl);
-		m_verticesBuf.setValues(m_gl, vertices);
-		m_verticesBuf.unbind(m_gl);
-
-		m_indicesBuf.bind(m_gl.getGL1());
-		m_indicesBuf.setValues(m_gl.getGL1(), indices);
-		m_indicesBuf.unbind(m_gl.getGL1());
-
-		Geometry geo = new Geometry();
-		geo.addArray(new AttribArray(m_verticesBuf, InputUsage.VERTEX_POSITION_2D, 0, 0));
-		geo.setVertexCount(indices.length);
-		geo.setMode(Mode.TRIANGLES);
-		geo.setIndexBuffer(m_indicesBuf);
-		geo.render(m_gl);
-	}
 }

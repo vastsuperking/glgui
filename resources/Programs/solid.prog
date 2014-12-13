@@ -1,0 +1,16 @@
+<program>
+  <shaders>
+    <vertex-shader resource="Programs/solid.vert"/>
+    <fragment-shader resource="Programs/solid.frag"/>
+  </shaders>
+
+  <uniforms>
+  	<uniform name="modelMat" usage="MODEL_MATRIX" type="MAT3"/>
+    <uniform name="projMat" usage="PROJECTION_MATRIX" type="MAT3"/>
+	<uniform name="color" usage="DIFFUSE_COLOR" type="VEC4"/>
+  </uniforms>
+
+  <attributes>
+	<attribute name="vertPos" usage="VERTEX_POSITION" type="VEC2"/>
+  </attributes>
+</program>

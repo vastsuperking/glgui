@@ -1,0 +1,17 @@
+<program>
+  <shaders>
+    <vertex-shader resource="Programs/linear_gradient.vert"/>
+    <fragment-shader resource="Programs/linear_gradient.frag"/>
+  </shaders>
+
+  <uniforms>
+  	<uniform name="modelMat" usage="MODEL_MATRIX" type="MAT3"/>
+    <uniform name="projMat" usage="PROJECTION_MATRIX" type="MAT3"/>
+  </uniforms>
+
+  <attributes>
+   	<!--<ffp-vert-attribute/>-->  	
+	<attribute name="vertPos" usage="VERTEX_POSITION" type="VEC2"/>
+	<attribute name="vertColor" usage="VERTEX_COLOR" type="VEC4"/>
+  </attributes>
+</program>

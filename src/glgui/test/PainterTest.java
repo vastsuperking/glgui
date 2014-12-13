@@ -4,7 +4,9 @@ import glcommon.Color;
 import glcommon.image.Image2D;
 import glcommon.image.ImageIO;
 import glcommon.util.ResourceLocator.ClasspathResourceLocator;
+import glgui.painter.ImagePaint;
 import glgui.painter.Painter;
+import glgui.painter.SolidPaint;
 import glgui.painter.graphic.Gradient;
 import glgui.painter.graphic.Gradient.GradientDirection;
 import glgui.render.pipeline.Pipeline;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class PainterTest {
+	//public static final String IMAGE = "Test/Textures/test_colors.jpg";
 	public static final String IMAGE = "Test/Textures/image.png";
 	public static void main(String[] args) throws IOException {
 		GLWindow window = new GLWindow();
@@ -32,20 +35,24 @@ public class PainterTest {
 		while (!window.getGLWindow().closeRequested()) {
 			pipeline.startRendering();
 			Painter painter = pipeline.getPainter();
-			painter.setColor(Color.BLUE);
-			
+			painter.setPaint(new ImagePaint(image));			
 			painter.pushTransform();
 			painter.scale(3, 3);
-			painter.fillRect(0, 0, 100, 100);
+			//painter.fillRect(0, 0, 100, 100);
 			painter.popTransform();
 			
-			
-			painter.setColor(Color.WHITE);
-			g.paint(painter, 100, 100, 1000, 1000);
-			
+			//painter.setPaint(new SolidPaint(Color.BLUE));
+			//painter.setPaint(new ImagePaint(image));			
+			//g.paint(painter, 100, 100, 1000, 1000);
+			//painter.fillRoundedRect(0, 0, 100, 100, 1000, 100);
+			//painter.fillArc(500, 500, 500, 500, 
+			//				0, (float) -(0.5 * Math.PI));
+			//painter.fillElipse(500, 500, 500, 500, 100, -0.5f, 0.5f, 0.5f, 0.5f);
+			//painter.fillRoundedRect(0, 0, 1000, 1000, 100, 10, 0, 0, 1, 1);
+			painter.fillRoundedRect(100, 100, 1000, 1000, 10, 10);
 			painter.scale(2, 2);
 			painter.translate(-50, -50);
-			painter.drawImage(image, 0, 0, 100, 100);
+			//painter.drawImage(image, 0, 0, 100, 100);
 			
 			
 			pipeline.stopRendering();

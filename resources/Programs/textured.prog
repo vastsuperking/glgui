@@ -1,0 +1,18 @@
+<program>
+  <shaders>
+    <vertex-shader resource="Programs/textured.vert"/>
+    <fragment-shader resource="Programs/textured.frag"/>
+  </shaders>
+
+  <uniforms>
+  	<uniform name="modelMat" usage="MODEL_MATRIX" type="MAT3"/>
+    <uniform name="projMat" usage="PROJECTION_MATRIX" type="MAT3"/>
+    
+	<uniform name="diffuseSampler" usage="DIFFUSE_SAMPLER" type="SAMPLER2D"/>
+  </uniforms>
+
+  <attributes>
+	<attribute name="vertPos" usage="VERTEX_POSITION" type="VEC2"/>
+	<attribute name="vertTexCoords" usage="VERTEX_TEX_COORD" type="VEC2"/>
+  </attributes>
+</program>
