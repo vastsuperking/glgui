@@ -23,8 +23,6 @@ public class PainterTest {
 		window.setName("Painter Test");
 		window.setSize(1024, 1024);
 		
-		Gradient g = new Gradient(GradientDirection.VERTICAL, Color.BLUE, Color.RED);
-		
 		Pipeline pipeline = window.getPipeline();
 		pipeline.init();
 		
@@ -35,7 +33,7 @@ public class PainterTest {
 			pipeline.startRendering();
 			Painter painter = pipeline.getPainter();
 			//painter.setPaint(new ImagePaint(image));
-			painter.setPaint(new LinearGradientPaint(GradientDirection.VERTICAL, Color.RED, Color.WHITE, Color.GREEN));
+			painter.setPaint(new LinearGradientPaint(GradientDirection.VERTICAL, Color.BLACK, Color.RED, Color.YELLOW));
 			painter.pushTransform();
 			painter.scale(3, 3);
 			painter.popTransform();

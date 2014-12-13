@@ -36,7 +36,8 @@ public class LinearGradientPaint extends Paint {
 		//Create bytebuffer with two pixels(4 bytes per pixel)
 		//The byte buffer is ordered row by row(bottom up)
 		ByteBuffer buffer = BufferUtils.createByteBuffer(m_colors.size() * 4);
-		for (Color c : m_colors) {
+		for (int i = m_colors.size() - 1; i > 0; i--) {
+			Color c = m_colors.get(i);
 			s_putColor(buffer, c);
 		}
 
