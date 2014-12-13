@@ -7,11 +7,12 @@
   <uniforms>
   	<uniform name="modelMat" usage="MODEL_MATRIX" type="MAT3"/>
     <uniform name="projMat" usage="PROJECTION_MATRIX" type="MAT3"/>
+    
+	<uniform name="diffuseSampler" usage="GRADIENT_SAMPLER" type="SAMPLER2D"/>
   </uniforms>
 
   <attributes>
-   	<!--<ffp-vert-attribute/>-->  	
 	<attribute name="vertPos" usage="VERTEX_POSITION" type="VEC2"/>
-	<attribute name="vertColor" usage="VERTEX_COLOR" type="VEC4"/>
+	<attribute name="vertTexCoords" usage="VERTEX_TEX_COORD" type="VEC2"/>
   </attributes>
 </program>

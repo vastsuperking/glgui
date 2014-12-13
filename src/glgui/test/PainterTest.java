@@ -4,9 +4,8 @@ import glcommon.Color;
 import glcommon.image.Image2D;
 import glcommon.image.ImageIO;
 import glcommon.util.ResourceLocator.ClasspathResourceLocator;
-import glgui.painter.ImagePaint;
+import glgui.painter.LinearGradientPaint;
 import glgui.painter.Painter;
-import glgui.painter.SolidPaint;
 import glgui.painter.graphic.Gradient;
 import glgui.painter.graphic.Gradient.GradientDirection;
 import glgui.render.pipeline.Pipeline;
@@ -35,10 +34,10 @@ public class PainterTest {
 		while (!window.getGLWindow().closeRequested()) {
 			pipeline.startRendering();
 			Painter painter = pipeline.getPainter();
-			painter.setPaint(new ImagePaint(image));			
+			//painter.setPaint(new ImagePaint(image));
+			painter.setPaint(new LinearGradientPaint(GradientDirection.VERTICAL, Color.RED, Color.WHITE, Color.GREEN));
 			painter.pushTransform();
 			painter.scale(3, 3);
-			//painter.fillRect(0, 0, 100, 100);
 			painter.popTransform();
 			
 			//painter.setPaint(new SolidPaint(Color.BLUE));
@@ -49,13 +48,19 @@ public class PainterTest {
 			//				0, (float) -(0.5 * Math.PI));
 			//painter.fillElipse(500, 500, 500, 500, 100, -0.5f, 0.5f, 0.5f, 0.5f);
 			//painter.fillRoundedRect(0, 0, 1000, 1000, 100, 10, 0, 0, 1, 1);
-			painter.fillRoundedRect(100, 100, 1000, 1000, 10, 10);
+			painter.fillRoundedRect(0, 0, 1100, 1100, 50, 400);
 			painter.scale(2, 2);
 			painter.translate(-50, -50);
 			//painter.drawImage(image, 0, 0, 100, 100);
 			
 			
 			pipeline.stopRendering();
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		image.destroyInstances();
 		
