@@ -8,6 +8,8 @@ import glgui.render.pipeline.PWindow;
 import glgui.render.pipeline.Pipeline;
 import gltools.display.Window;
 import gltools.gl.lwjgl.glfw.GLFWWindow;
+import gltools.input.Keyboard;
+import gltools.input.Mouse;
 
 import java.io.File;
 import java.util.HashSet;
@@ -141,6 +143,9 @@ public class GLWindow implements PWindow {
 	}
 	
 	public Window getGLWindow() { return m_window; }
+	
+	public Mouse getMouse() { return m_window.getMouse(); }
+	public Keyboard getKeyboard() { return m_window.getKeyboard(); }
 	
 	@Override
 	public void setVisible(boolean visible) {

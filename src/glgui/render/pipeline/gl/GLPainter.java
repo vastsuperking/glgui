@@ -246,6 +246,12 @@ public class GLPainter implements Painter {
 	}
 	@Override
 	public void fillRoundedRect(float x, float y, float width, float height,
+								float radius) {
+		int resolution = (int) ( getScale().scale(radius).length() / 10 );
+		fillRoundedRect(x, y, width, height, radius, resolution, 0, 0, 1, 1);
+	}
+	@Override
+	public void fillRoundedRect(float x, float y, float width, float height,
 								float radius, int resolution) {
 		fillRoundedRect(x, y, width, height, radius, resolution, 0, 0, 1, 1);
 	}
@@ -254,7 +260,7 @@ public class GLPainter implements Painter {
 								float radius, int resolution,
 								float tx, float ty, float tw, float th) {
 		float radiusTw = tw * radius / width;
-		float radiusTh = tw * radius / width;
+		float radiusTh = tw * radius / height;
 		//Fill bottom left corner
 		fillArc(x + radius, y + radius, radius, radius, 
 				(float) (Math.PI), (float) (0.5 * Math.PI), resolution,

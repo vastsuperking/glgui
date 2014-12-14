@@ -163,6 +163,24 @@ public interface CSSOperation {
 			else return Integer.parseInt(value);
 		}
 	}
+	//A simple operation on a string that returns an float
+	//Perhaps rename operation?
+	public static class CSSFloatOperation implements CSSOperation {
+		@Override
+		public boolean matches(String value) {
+			try {
+				Float.parseFloat(value);
+				return true;
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		@Override
+		public Object process(String value, CSSValueEvaluator eval) {
+			if (!matches(value)) throw new RuntimeException(value + " is not an float!");
+			else return Float.parseFloat(value);
+		}
+	}
 	//A simple operation on a string that turns it into a boolean
 	//Perhaps rename to something else?
 	public static class CSSBooleanOperation implements CSSOperation {

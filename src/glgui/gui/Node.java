@@ -3,6 +3,10 @@ package glgui.gui;
 import glgui.css.CSSDeclaration;
 import glgui.css.CSSNode;
 import glgui.css.StyleSheet;
+import glgui.input.Event;
+import glgui.input.MouseButtonEvent;
+import glgui.input.MouseEnterEvent;
+import glgui.input.MouseExitEvent;
 import glgui.painter.Painter;
 
 import java.util.ArrayList;
@@ -31,6 +35,10 @@ public abstract class Node implements Stylable, CSSNode {
 	private Dimension m_minimumSize = new Dimension(0, 0);
 	private Dimension m_maximumSize = new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE);
 	
+	private boolean m_hovered = false;
+	
+	protected boolean m_waitingMouseRelease = false;
+	
 	public Node() {}
 	
 	public int getX() { return m_x; }
@@ -38,15 +46,21 @@ public abstract class Node implements Stylable, CSSNode {
 	public int getWidth() { return m_width; }
 	public int getHeight() { return m_height; }
 	
-	public Dimension getPreferredSize() { return m_preferredSize; }
+	public Dimension getPreferredSize() {
+		return new Dimension(Math.max(m_preferredSize.getWidth(), m_minimumSize.getWidth()),
+							 Math.max(m_preferredSize.getHeight(), m_minimumSize.getHeight()));
+	}
 	public Dimension getMinimumSize() { return m_minimumSize; }
 	public Dimension getMaximumSize() { return m_maximumSize; }
 	
+	public void setPreferrredSize(Dimension d) { m_preferredSize = d; }
+	public void setMinimumSize(Dimension d) { m_minimumSize = d; }
+	public void setMaximumSize(Dimension d) { m_maximumSize = d; }
+	
 	public Parent getParent() { return m_parent; } 
 	public String getTag() { return getClass().getSimpleName(); }
-	public String getID() { return m_id; }
+	public String getID() { return m_id == null ? "" : m_id; }
 	public Set<String> getClasses() { return m_classes; }
-	public boolean inState(String state) { return false; }
 	public StylingManager getStyler() { return m_styler; }
 	public List<StyleSheet> getStyleSheets() { return m_stylesheets; }
 	
@@ -57,6 +71,8 @@ public abstract class Node implements Stylable, CSSNode {
 		if (m_parent != null) sheets.addAll(m_parent.getAllStyleSheets());
 		return sheets;
 	}
+	
+	public boolean isHovered() { return m_hovered; }
 	
 	public void setX(int x) { m_x = x; }
 	public void setY(int y) { m_y = y; }
@@ -86,6 +102,13 @@ public abstract class Node implements Stylable, CSSNode {
 	
 	public void setStyle(String style, Object value) {
 		m_styler.setStyle(style, value);
+	}
+	
+	public boolean inState(String state) {
+		switch(state) {
+		case "hovered": return isHovered();
+		default: return false;
+		}
 	}
 	
 	public void style() {
@@ -127,6 +150,18 @@ public abstract class Node implements Stylable, CSSNode {
 	
 	public void revalidate() {
 		validate();
+	}
+	
+	public void onEvent(Event e) {
+		if (e instanceof MouseEnterEvent) {
+			m_hovered = true;
+			style();
+		} else if (e instanceof MouseExitEvent) {
+			m_hovered = false;
+			style();
+		} else if (e instanceof MouseButtonEvent) {
+			m_waitingMouseRelease = ((MouseButtonEvent) e).isPressed();
+		}
 	}
 	
 	public abstract void paintNode(Painter p);

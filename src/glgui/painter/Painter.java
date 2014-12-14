@@ -29,6 +29,8 @@ public interface Painter {
 	
 	public void fillPolygon(float x[], float y[]);
 	public void fillRoundedRect(float x, float y, float width, float height, 
+			float radius);
+	public void fillRoundedRect(float x, float y, float width, float height, 
 			float radius, int resolution);
 	public void fillRoundedRect(float x, float y, float width, float height, 
 			float radius, int resolution,

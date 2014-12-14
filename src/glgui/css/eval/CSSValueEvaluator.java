@@ -2,6 +2,7 @@ package glgui.css.eval;
 
 import glgui.css.eval.CSSOperation.CSSBooleanOperation;
 import glgui.css.eval.CSSOperation.CSSColorOperation;
+import glgui.css.eval.CSSOperation.CSSFloatOperation;
 import glgui.css.eval.CSSOperation.CSSFunctionOperation;
 import glgui.css.eval.CSSOperation.CSSIntegerOperation;
 import glgui.css.eval.CSSOperation.CSSStringLiteralOperation;
@@ -27,6 +28,7 @@ public class CSSValueEvaluator {
 		
 		addOperation(new CSSColorOperation());
 		addOperation(new CSSIntegerOperation());
+		addOperation(new CSSFloatOperation());
 		addOperation(new CSSBooleanOperation());
 		
 		addOperation(new CSSStringLiteralOperation());

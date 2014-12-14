@@ -1,13 +1,13 @@
 Button {
 	text-color : red;
-	background : vertical-gradient(red, white);
+	background : vertical-gradient(red, #AAAAAA);
 	background-radius : 100;
 }
 Button:hovered {
 	text-color : green;
 }
 Button:pressed {
-	background : vertical-gradient(red, #CCCCCC);
+	background : vertical-gradient(red, black);
 }
 #foo {
 	text-color : blue;

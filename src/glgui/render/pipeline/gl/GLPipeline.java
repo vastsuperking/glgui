@@ -22,6 +22,7 @@ public class GLPipeline implements Pipeline {
 		
 		m_painter.updateProjection(m_window.getGLWindow().getWidth(), m_window.getGLWindow().getHeight());
 
+		m_gl.releaseCurrent();
 		m_window.getGLWindow().addResizedListener(new ResizeListener() {
 			@Override
 			public void onResize(int width, int height) {
@@ -31,9 +32,7 @@ public class GLPipeline implements Pipeline {
 				m_painter.updateProjection(width, height);
 				if (!hasGL)m_gl.releaseCurrent();
 			}
-		});
-		m_gl.releaseCurrent();
-	}
+		});	}
 	
 	@Override
 	public PDisplay getDisplay() {
@@ -55,7 +54,7 @@ public class GLPipeline implements Pipeline {
 
 	@Override
 	public void startRendering() {
-		m_gl.makeCurrent();
+		if (!m_gl.isCurrent()) m_gl.makeCurrent();
 		m_painter.start();
 	}
 

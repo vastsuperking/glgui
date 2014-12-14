@@ -31,9 +31,11 @@ public class LinearGradientPaint extends Paint {
 	}
 	public LinearGradientPaint(Direction dir, Color... colors) {
 		m_direction = dir;
-		float percent = 1f / colors.length;
+		float inc = 1f / (colors.length - 1);
+		float stop = 0f;
 		for (Color c : colors) {
-			m_colors.add(new ColorStop(c, percent));
+			m_colors.add(new ColorStop(c, stop));
+			stop += inc;
 		}
 		generateImage();
 	}
@@ -43,17 +45,13 @@ public class LinearGradientPaint extends Paint {
 	public Image2D getImage() { return m_image; }
 	
 	private void generateImage() {
-		int resolution = m_colors.size();
+		int resolution = m_colors.size() * 10;
 		//Calculate the resolution needed
 		float percentSum = 0;
 		for (ColorStop s : m_colors) {
 			percentSum += s.getPercent();
-			int res = (int) (1 / s.getPercent());
-			if (res > resolution) resolution = res;
 		}
-		if (Math.abs(percentSum - 1) > 0.01f) throw new RuntimeException("Color stops do not add up to 100%");
-		
-		//Create bytebuffer with two pixels(4 bytes per pixel)
+		//Create bytebuffer with resolution # pixels(4 bytes per pixel)
 		//The byte buffer is ordered row by row(bottom up)
 		ByteBuffer buffer = BufferUtils.createByteBuffer(resolution * 4);
 		
@@ -61,18 +59,46 @@ public class LinearGradientPaint extends Paint {
 			for (int i = m_colors.size() - 1; i >= 0; i--) {
 				//Num of pixels this color should get
 				ColorStop c = m_colors.get(i);
-				int pixels = (int) (c.getPercent() * resolution);
+				ColorStop nc = null;
+				if (i != 0) nc = m_colors.get(i - 1);
+				else {
+					break;
+				}
+				
+				int pixels = (int) ((c.getPercent() - nc.getPercent()) * resolution);
+				System.out.println("Adding : " + pixels + " pixels" + nc.getPercent() + " " + c.getPercent());
 				for (int p = 0; p < pixels; p++) {
-					s_putColor(buffer, c.getColor());
+					float cComp = 1 - p / (float) pixels;
+					float ncComp = p / (float) pixels;
+					System.out.println(cComp + " " + ncComp);
+					Color color = new Color(cComp * c.getColor().getRed() + ncComp * nc.getColor().getRed(),
+											cComp * c.getColor().getGreen() + ncComp * nc.getColor().getGreen(),
+											cComp * c.getColor().getBlue() + ncComp * nc.getColor().getBlue(),
+											cComp * c.getColor().getAlpha() + ncComp * nc.getColor().getAlpha());
+					s_putColor(buffer, color);
 				}
 			}
 		} else {
-			for (int i = 0;i < m_colors.size(); i++) {
+			for (int i = 0; i < m_colors.size(); i++) {
 				//Num of pixels this color should get
 				ColorStop c = m_colors.get(i);
-				int pixels = (int) (c.getPercent() * resolution);
+				ColorStop nc = null;
+				if (i != m_colors.size() - 1) nc = m_colors.get(i + 1);
+				else {
+					break;
+				}
+				
+				int pixels = (int) ((nc.getPercent() - c.getPercent()) * resolution);
+				System.out.println("Adding : " + pixels + " pixels res: " + resolution + " " + nc.getPercent() + " " + c.getPercent());
 				for (int p = 0; p < pixels; p++) {
-					s_putColor(buffer, c.getColor());
+					float cComp = 1 - p / (float) pixels;
+					float ncComp = p / (float) pixels;
+					System.out.println(cComp + " " + ncComp);
+					Color color = new Color(cComp * c.getColor().getRed() + ncComp * nc.getColor().getRed(),
+											cComp * c.getColor().getGreen() + ncComp * nc.getColor().getGreen(),
+											cComp * c.getColor().getBlue() + ncComp * nc.getColor().getBlue(),
+											cComp * c.getColor().getAlpha() + ncComp * nc.getColor().getAlpha());
+					s_putColor(buffer, color);
 				}
 			}
 		}

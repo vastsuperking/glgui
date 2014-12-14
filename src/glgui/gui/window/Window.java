@@ -1,11 +1,19 @@
 package glgui.gui.window;
 
+import glcommon.vector.Vector2f;
 import glgui.gui.BorderPane;
-import glgui.gui.Pane;
+import glgui.input.MouseButtonEvent;
+import glgui.input.MouseEnterEvent;
+import glgui.input.MouseExitEvent;
+import glgui.input.MouseMoveEvent;
+import glgui.input.MouseWheelEvent;
 import glgui.painter.Painter;
 import glgui.render.pipeline.PWindow;
 import glgui.render.pipeline.PWindowProvider;
 import glgui.render.pipeline.Pipeline;
+import gltools.input.Mouse;
+import gltools.input.Mouse.MouseButton;
+import gltools.input.MouseListener;
 
 public class Window {
 	private PWindow m_window;
@@ -21,6 +29,35 @@ public class Window {
 				m_contentPane.setWidth(width);
 				m_contentPane.setHeight(height);
 				m_contentPane.revalidate();
+			}
+		});
+		m_window.getMouse().addListener(new MouseListener() {
+			@Override
+			public void mouseMoved(Mouse m, int x, int y, Vector2f delta) {
+				m_contentPane.onEvent(new MouseMoveEvent(x, y, delta));
+			}
+			@Override
+			public void mouseScroll(Mouse m, float dx, float dy) {
+				m_contentPane.onEvent(new MouseWheelEvent(m.getX(), m.getY(), dx, dy));
+			}
+			@Override
+			public void mouseDelta(Mouse m, int dx, int dy) {}
+			
+			@Override
+			public void mouseButtonPressed(Mouse m, MouseButton button) {
+				m_contentPane.onEvent(new MouseButtonEvent(m.getX(), m.getY(), button, true));
+			}
+			@Override
+			public void mouseButtonReleased(Mouse m, MouseButton button) {
+				m_contentPane.onEvent(new MouseButtonEvent(m.getX(), m.getY(), button, false));
+			}
+			@Override
+			public void mouseEntered(Mouse m) {
+				m_contentPane.onEvent(new MouseEnterEvent(m.getX(), m.getY()));
+			}
+			@Override
+			public void mouseExited(Mouse m) {
+				m_contentPane.onEvent(new MouseExitEvent(m.getX(), m.getY()));
 			}
 		});
 	}

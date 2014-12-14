@@ -7,7 +7,6 @@ import glcommon.util.ResourceLocator.ClasspathResourceLocator;
 import glgui.gui.Button;
 import glgui.painter.ImagePaint;
 import glgui.painter.LinearGradientPaint;
-import glgui.painter.LinearGradientPaint.ColorStop;
 import glgui.painter.LinearGradientPaint.Direction;
 import glgui.painter.Paint;
 import glgui.painter.Painter;
@@ -18,8 +17,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class PainterTest {
-	//public static final String IMAGE = "Test/Textures/test_colors.jpg";
-	public static final String IMAGE = "Test/Textures/image.png";
+	public static final String IMAGE = "Test/Textures/test_colors.jpg";
+	public static final String SPOTS_IMAGE = "Test/Textures/spots.jpg";
+	//public static final String IMAGE = "Test/Textures/image.png";
 	public static void main(String[] args) throws IOException {
 		GLWindow window = new GLWindow();
 		window.setVisible(true);
@@ -32,18 +32,20 @@ public class PainterTest {
 		
 		InputStream in = new ClasspathResourceLocator().getResource(IMAGE);
 		Image2D image = ImageIO.s_read(in);
+		InputStream in2 = new ClasspathResourceLocator().getResource(SPOTS_IMAGE);
+		Image2D image2 = ImageIO.s_read(in2);
 		
-		Paint p = new LinearGradientPaint(Direction.VERTICAL, new ColorStop(Color.WHITE, 0.1f), 
+		/*Paint p = new LinearGradientPaint(Direction.VERTICAL, new ColorStop(Color.WHITE, 0.1f), 
 				 						  new ColorStop(Color.RED, 0.1f),
-				 						  new ColorStop(Color.BLUE, 0.3f),
-				 						  new ColorStop(Color.YELLOW, 0.5f));
+				 						  new ColorStop(Color.YELLOW, 0.3f));*/
+		Paint p = new LinearGradientPaint(Direction.HORIZONTAL, Color.BLACK, Color.RED, Color.YELLOW);
 		
 		while (!window.getGLWindow().closeRequested()) {
 			pipeline.startRendering();
 			Painter painter = pipeline.getPainter();
 			//painter.setPaint(new ImagePaint(image));
 
-			//painter.fillRect(0, 0, 2048, 2048);
+			//
 			
 			painter.setPaint(p);
 			painter.pushTransform();
@@ -61,12 +63,16 @@ public class PainterTest {
 			//painter.fillRoundedRect(0, 0, 1000, 1000, 100, 10, 0, 0, 1, 1);
 			painter.drawString("Foo", Button.s_defaultFont, 0, 600, 1);
 			
-			painter.fillRoundedRect(0, 0, 500, 500, 50, 50);
+			//painter.setPaint(new ImagePaint(image));
+			
+			painter.fillRoundedRect(0, 0, window.getWidth(), window.getHeight(), 100);
+			//painter.fillRoundedRect(0, 0, 500, 800, 100, 50);
 			
 			painter.setPaint(new ImagePaint(image));
 			painter.drawString("Foobar", Button.s_defaultFont, 0, 700, 1);
 
-
+			painter.setPaint(new ImagePaint(image2));
+			painter.drawString("Foobar", Button.s_defaultFont, 0, 800, 1);
 			
 			pipeline.stopRendering();
 			try {

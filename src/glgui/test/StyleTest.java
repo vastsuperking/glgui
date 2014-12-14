@@ -6,6 +6,7 @@ import glgui.css.StyleSheet;
 import glgui.css.eval.CSSFunction;
 import glgui.gui.BorderPane;
 import glgui.gui.Button;
+import glgui.gui.Dimension;
 import glgui.gui.window.Window;
 import glgui.gui.window.WindowStateListener;
 import glgui.painter.LinearGradientPaint;
@@ -45,18 +46,24 @@ public class StyleTest {
 		}
 		
 		Window window = new Window();
-		window.setVisible(true);
 		window.setName("Window");
+		window.setVisible(true);
 		window.setSize(1024, 1024);
+		System.out.println("Window initialized");
 
+		
 		window.getContentPane().addStyleSheet(ss);
 		
 		BorderPane content = window.getContentPane();
 		
-		Button button = new Button("Foo");
-		button.setID("foo");
+		Button buttonA = new Button("Foo");
+		buttonA.setID("foo");
 		
-		content.setCenter(button);
+		Button buttonB = new Button("Bar");
+		buttonB.setMinimumSize(new Dimension(300, 300));
+		
+		content.setCenter(buttonA);
+		content.setLeft(buttonB);
 		
 		window.addStateListener(new WindowStateListener() {
 			@Override
