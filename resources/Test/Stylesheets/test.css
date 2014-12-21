@@ -1,3 +1,6 @@
+#contentPane {
+	background : white;
+}
 Button {
 	text-color : red;
 	background : vertical-gradient(red, white);
@@ -8,6 +11,13 @@ Button:hovered {
 }
 Button:pressed {
 	background : vertical-gradient(red, #CCCCCC);
+}
+TextField {
+	background : vertical-gradient(white, blue);
+	background-radius : 100;
+}
+TextField:focused {
+	background : vertical-gradient(black, green);
 }
 #foo {
 	text-color : blue;

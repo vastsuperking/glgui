@@ -107,13 +107,13 @@ public interface CSSOperation {
 			if (value.startsWith("rgb(") && value.endsWith(")")) {
 				float r = s_parseIntRange(parts[0]);
 				float g = s_parseIntRange(parts[1]);
-				float b = s_parseIntRange(parts[2]);
+				float b = s_parseFloatRange(parts[2]);
 				return new Color(r, g, b);
 			} else if (value.startsWith("rgba(") && value.endsWith(")")) {
 				float r = s_parseIntRange(parts[0]);
 				float g = s_parseIntRange(parts[1]);
 				float b = s_parseIntRange(parts[2]);				
-				float a = s_parseIntRange(parts[3]);
+				float a = s_parseFloatRange(parts[3]);
 				return new Color(r, g, b);
 			} else if (value.startsWith("#")) {
 				value = value.substring(1, value.length());
@@ -137,9 +137,13 @@ public interface CSSOperation {
 		//Will parse an int or percent
 		public float s_parseIntRange(String value) {
 			if (value.endsWith("%")) {
-				return Integer.parseInt(value.substring(0, value.length() - 1)) * 255 
-							/ 100f;
+				return Integer.parseInt(value.substring(0, value.length() - 1)) / 100f;
 			} else return Integer.parseInt(value) / 255f;
+		}
+		public float s_parseFloatRange(String value) {
+			if (value.endsWith("%")) {
+				return Float.parseFloat(value.substring(0, value.length() - 1)) / 100f;
+			} else return Float.parseFloat(value);
 		}
 		
 	}

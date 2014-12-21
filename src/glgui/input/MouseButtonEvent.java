@@ -1,6 +1,6 @@
 package glgui.input;
 
-import gltools.input.Mouse.MouseButton;
+import glcommon.input.Mouse.MouseButton;
 
 public class MouseButtonEvent extends MouseEvent {
 	private MouseButton m_button;

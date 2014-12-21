@@ -22,6 +22,8 @@ public class GLPaintManager {
 	private HashMap<Class<? extends Paint>, GLPaintType<? extends Paint>> m_paints = 
 			new HashMap<Class<? extends Paint>, GLPaintType<? extends Paint>>(); 
 	
+	private boolean m_bound = false;
+	
 	public GLPaintManager() {
 		
 	}
@@ -39,8 +41,10 @@ public class GLPaintManager {
 		GLPaintType<P> type = (GLPaintType<P>) m_paints.get(p.getClass());
 		type.apply(painter, p);
 		type.updateMats(painter, model.getCurrentMatrix(), proj.getCurrentMatrix());
+		m_bound = true;
 	}
 	public <P extends Paint> void updateMats(GLPainter painter, P p, GLMatrix3f model, GLMatrix3f proj) {
+		if (!m_bound) return;
 		if (!m_paints.containsKey(p.getClass()))
 			throw new RuntimeException("Cannot draw with paint: " + p);
 		@SuppressWarnings("unchecked")
@@ -53,6 +57,8 @@ public class GLPaintManager {
 		@SuppressWarnings("unchecked")
 		GLPaintType<P> type = (GLPaintType<P>) m_paints.get(p.getClass());
 		type.clear(painter, p);
+		
+		m_bound = false;
 	}
 	
 	public <P extends Paint> void enterTextMode(GLPainter painter, P p) {

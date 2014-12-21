@@ -1,10 +1,10 @@
 package glgui.render.pipeline;
 
+import glcommon.input.Keyboard;
+import glcommon.input.Mouse;
 import glgui.gui.window.FileDropListener;
 import glgui.gui.window.MoveListener;
 import glgui.gui.window.WindowStateListener;
-import gltools.input.Keyboard;
-import gltools.input.Mouse;
 
 public interface PWindow extends PDisplay {
 	public void setName(String name);

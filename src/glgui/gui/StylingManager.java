@@ -1,6 +1,8 @@
 package glgui.gui;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,30 +10,35 @@ import org.slf4j.LoggerFactory;
 public class StylingManager {
 	private static final Logger logger = LoggerFactory.getLogger(StylingManager.class);
 	
-	private HashMap<String, Styler<?>> m_stylers = new HashMap<String, Styler<?>>();
+	private HashMap<String, List<Styler<?>>> m_stylers = new HashMap<String, List<Styler<?>>>();
 	
 	public void addStyler(String style, Styler<?> styler) {
-		m_stylers.put(style, styler);
+		if (!m_stylers.containsKey(style))
+			m_stylers.put(style, new ArrayList<Styler<?>>());
+		m_stylers.get(style).add(styler);
 	}
 	
 	@SuppressWarnings("unchecked")
 	public <T> void setStyle(String style, T value) {
 		if (m_stylers.containsKey(style)) {
-			@SuppressWarnings("unchecked")
-			Styler<T> styler = (Styler<T>) m_stylers.get(style);
-			//TODO: Fix canStyle always being true bug(b/c casting generics)
-			if (!styler.canStyle(value))
-				throw new RuntimeException("Styler for: " + style + " cannot style " + value);
-			
-			if (isIntegerType(value.getClass()) && isFloatType(styler.getType())) {
-				styler.setStyle(style, (T) castNumeric(value, styler.getType()));
-			} else styler.setStyle(style, value);
+			List<Styler<?>> stylers = m_stylers.get(style);
+			for (Styler<?> s : stylers) {
+				if (s.canStyle(value)) {
+					Styler<T> styler = (Styler<T>) s;
+					if (isIntegerType(value.getClass()) && isFloatType(styler.getType())) {
+						styler.setStyle(style, (T) castNumeric(value, styler.getType()));
+					} else styler.setStyle(style, value);
+					return;
+				}
+			}
+			throw new RuntimeException("Could not find styler for: " + style + "=" + value);
 		} else logger.warn("Could not find styler for: " + style);
 	}
 	//Will clear all styling
 	public void resetStyles() {
-		for (Styler<?> s : m_stylers.values()) {
-			s.resetStyles();
+		for (List<Styler<?>> s : m_stylers.values()) {
+			//Take the first styler in each list
+			s.get(0).resetStyles();
 		}
 	}
 	public static abstract class Styler<T> {

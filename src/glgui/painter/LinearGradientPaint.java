@@ -66,11 +66,9 @@ public class LinearGradientPaint extends Paint {
 				}
 				
 				int pixels = (int) ((c.getPercent() - nc.getPercent()) * resolution);
-				System.out.println("Adding : " + pixels + " pixels" + nc.getPercent() + " " + c.getPercent());
 				for (int p = 0; p < pixels; p++) {
 					float cComp = 1 - p / (float) pixels;
 					float ncComp = p / (float) pixels;
-					System.out.println(cComp + " " + ncComp);
 					Color color = new Color(cComp * c.getColor().getRed() + ncComp * nc.getColor().getRed(),
 											cComp * c.getColor().getGreen() + ncComp * nc.getColor().getGreen(),
 											cComp * c.getColor().getBlue() + ncComp * nc.getColor().getBlue(),
@@ -117,6 +115,11 @@ public class LinearGradientPaint extends Paint {
 		m_image.setTWrapMode(ImageWrapMode.CLAMP_TO_EDGE);
 	}
 	
+	@Override
+	public String toString() {
+		return "Linear Gradient" + m_colors;
+	}
+	
 	private static void s_putColor(ByteBuffer buffer, Color color ) {
 		byte red = ((byte) (color.getRed() * 255));
 		byte green = ((byte) (color.getGreen() * 255));
@@ -136,5 +139,9 @@ public class LinearGradientPaint extends Paint {
 		
 		public Color getColor() { return m_color; }
 		public float getPercent() { return m_percent; }
+		
+		public String toString() {
+			return m_color + " to " + (int) (m_percent * 100) + "%";
+		}
 	}
 }

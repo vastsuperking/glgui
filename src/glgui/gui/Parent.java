@@ -1,6 +1,7 @@
 package glgui.gui;
 
 import glgui.input.Event;
+import glgui.input.KeyEvent;
 import glgui.input.MouseButtonEvent;
 import glgui.input.MouseEnterEvent;
 import glgui.input.MouseEvent;
@@ -13,16 +14,42 @@ public abstract class Parent extends Node {
 	protected List<Node> m_children = new ArrayList<Node>();
 
 	@Override
+	public boolean hasFocusedChild() {
+		synchronized(m_children) {
+			for (Node n : m_children) {
+				if (n.isFocused() || n.hasFocusedChild()) return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override
 	public void style() {
 		super.style();
-		for (Node n : m_children) n.style();
+		synchronized(m_children) {
+			for (Node n : m_children) n.style();
+		}
 	}
 	
 	@Override
 	public void validate() {
 		super.validate();
-		for (Node n : m_children) n.validate();
+		synchronized(m_children) {
+			for (Node n : m_children) n.validate();
+		}
 	}
+	
+	@Override
+	public void unfocus() {
+		super.unfocus();
+		//Unfocus children as well
+		synchronized(m_children) {
+			for (Node n : m_children) {
+				if (n.isFocused() || n.hasFocusedChild()) n.unfocus();
+			}
+		}
+	}
+	
 	@Override
 	public void onEvent(Event e) {
 		super.onEvent(e);
@@ -47,13 +74,17 @@ public abstract class Parent extends Node {
 				} else if (n.isHovered()) {
 					n.onEvent(new MouseExitEvent(nx, ny));
 				}
+			} else if (e instanceof KeyEvent) {
+				if (n.isFocused() || n.hasFocusedChild()) n.onEvent(e);
 			} else n.onEvent(e);
 		}
 	}
 	
 	public void removeChild(Node child) {
 		child.setParent(null);
-		m_children.remove(child);
+		synchronized(m_children) {
+			m_children.remove(child);
+		}
 		child.style();
 	}
 	
@@ -61,7 +92,9 @@ public abstract class Parent extends Node {
 		if (child.getParent() != null)
 			throw new RuntimeException("Node is already in scene tree");
 		child.setParent(this);
-		m_children.add(child);
+		synchronized(m_children) {
+			m_children.add(child);
+		}
 		//Restyle the child
 		child.style();
 	}

@@ -1,5 +1,7 @@
 package glgui.render.pipeline.gl;
 
+import glcommon.input.Keyboard;
+import glcommon.input.Mouse;
 import glgui.gui.window.FileDropListener;
 import glgui.gui.window.MoveListener;
 import glgui.gui.window.ResizeListener;
@@ -8,8 +10,6 @@ import glgui.render.pipeline.PWindow;
 import glgui.render.pipeline.Pipeline;
 import gltools.display.Window;
 import gltools.gl.lwjgl.glfw.GLFWWindow;
-import gltools.input.Keyboard;
-import gltools.input.Mouse;
 
 import java.io.File;
 import java.util.HashSet;
@@ -151,6 +151,7 @@ public class GLWindow implements PWindow {
 	public void setVisible(boolean visible) {
 		if (!m_initialized && visible) {
 			m_window.setResizable(true);
+			m_window.setVisible(true);
 			m_window.init();
 			m_pipeline.setup(this);
 			m_initialized = true;

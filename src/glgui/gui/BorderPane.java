@@ -47,7 +47,7 @@ public class BorderPane extends Pane {
 
 		if (m_top != null) {
 			d = m_top.getPreferredSize();
-			int h = Math.min(d.getHeight(), height >> 1);
+			int h = d.getHeight();
 			m_top.setBounds(x, height - h, width, h);
 			height -= h;
 		}
@@ -55,24 +55,27 @@ public class BorderPane extends Pane {
 			d = m_bottom.getPreferredSize();
 			//Height here b/c we halve already subtracted top
 			//from height
-			int h = Math.min(d.getHeight(), height);
+			int h = d.getHeight();
 			m_bottom.setBounds(x, y, width, h);
 			y += h;
 		}
 		if (m_left != null) {
 			d = m_left.getPreferredSize();
-			int w = Math.min(d.getWidth(), width >> 1);
+			int w = d.getWidth();
 			m_left.setBounds(0, y, w, height);
 			x += w;
 			width -= w;
 		}
 		if (m_right != null) {
 			d = m_right.getPreferredSize();
-			int w = Math.min(d.getWidth(), width >> 1);
-			m_left.setBounds(getWidth() - w, y, w, height);
+			int w = d.getWidth();
+			m_right.setBounds(getWidth() - w, y, w, height);
+			width -= w;
 		}
 		if (m_center != null) {
 			m_center.setBounds(x, y, width, height);
 		}
+		//Now validate each of the children
+		super.validate();
 	}
 }

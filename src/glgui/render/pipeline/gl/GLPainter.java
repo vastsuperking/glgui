@@ -4,13 +4,13 @@ import glcommon.BufferUtils;
 import glcommon.font.Font;
 import glcommon.font.Font.Glyph;
 import glcommon.image.Image2D;
+import glcommon.util.ResourceLocator.ClasspathResourceLocator;
 import glcommon.vector.Matrix3f;
 import glcommon.vector.MatrixFactory;
 import glcommon.vector.MatrixUtils;
 import glcommon.vector.Vector2f;
 import glextra.material.GlobalParamBindingSet;
 import glextra.renderer.GLTextureManager;
-import glgui.painter.ImagePaint;
 import glgui.painter.Paint;
 import glgui.painter.Painter;
 import gltools.Mode;
@@ -18,17 +18,32 @@ import gltools.buffer.AttribArray;
 import gltools.buffer.ColorBuffer;
 import gltools.buffer.Geometry;
 import gltools.buffer.IndexBuffer;
+import gltools.buffer.StencilBuffer;
+import gltools.buffer.StencilBuffer.StencilOP;
+import gltools.buffer.StencilBuffer.StencilOperation;
+import gltools.buffer.StencilBuffer.StencilTest;
+import gltools.buffer.StencilBuffer.TestFunction;
 import gltools.buffer.VertexBuffer;
 import gltools.gl.GL;
 import gltools.gl.GL1;
 import gltools.shader.InputUsage;
+import gltools.shader.Program;
+import gltools.shader.Program.ProgramLinkException;
+import gltools.shader.ProgramXMLLoader;
+import gltools.shader.Shader.ShaderCompileException;
+import gltools.texture.Texture2D;
 import gltools.util.GLMatrix3f;
 
+import java.awt.Shape;
+import java.awt.geom.Rectangle2D;
+import java.io.IOException;
 import java.nio.FloatBuffer;
 
 public class GLPainter implements Painter {	
 	private GL m_gl;
 
+	private Shape m_clip;
+	
 	public GLMatrix3f m_modelMat;
 	public GLMatrix3f m_projMat;
 	
@@ -38,6 +53,9 @@ public class GLPainter implements Painter {
 	
 	private GlobalParamBindingSet m_globals = new GlobalParamBindingSet();
 
+	//For drawing FBO's directly
+	private Program m_textureProg;
+	
 	private Paint m_paint = null;
 	
 	private GLTextureManager m_textureManager;
@@ -64,6 +82,12 @@ public class GLPainter implements Painter {
 		
 		m_globals.addParam(InputUsage.MODEL_MATRIX_2D, m_modelMat);
 		m_globals.addParam(InputUsage.PROJECTION_MATRIX_2D, m_projMat);
+		
+		try {
+			m_textureProg = ProgramXMLLoader.s_load(m_gl, "Programs/textured.prog", new ClasspathResourceLocator()).get(0);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public GL getGL() { return m_gl; }
@@ -72,19 +96,43 @@ public class GLPainter implements Painter {
 	
 	public void start() {
 		ColorBuffer.getInstance().clear(m_gl);
+		StencilBuffer.getInstance().clear(m_gl);
 		m_modelMat.setIdentity();
-
+		set();
+	}
+	//Will reset OGL params
+	public void set() {
 		m_gl.glEnable(GL1.GL_BLEND);
-		m_gl.getGL1().glBlendFunc(GL1.GL_SRC_ALPHA,	GL1.GL_ONE_MINUS_SRC_ALPHA);
+		m_gl.getGL1().glBlendFunc(GL1.GL_SRC_ALPHA,	GL1.GL_ONE_MINUS_SRC_ALPHA);		
+	}
+	//Remove OGL params
+	public void unset() {
+		m_gl.glDisable(GL1.GL_BLEND);		
 	}
 	
 	public void stop() {
-		m_gl.glDisable(GL1.GL_BLEND);
+		unset();
 	}
 	
 	public void updateProjection(float width, float height) {
 		m_projMat.setCurrentMatrix(
 				MatrixFactory.createAffineProjectionMatrix(0, width, height, 0));
+	}
+	
+	public void drawTexture(Texture2D texture, float x, float y, float w, float h) {
+		Paint p = getPaint();
+		
+		m_textureProg.bind(m_gl);
+		
+		m_modelMat.load(m_gl);
+		m_projMat.load(m_gl);
+		
+		texture.bind(m_gl, 0);
+		fillRect(x, y, w, h, 0, 0, 1, 1);
+		
+		m_textureProg.unbind(m_gl);
+		
+		setPaint(p);
 	}
 	
 	//
@@ -102,6 +150,37 @@ public class GLPainter implements Painter {
 	}
 	public Paint getPaint() { return m_paint; }
 	
+	public void setClip(float x, float y, float width, float height) {
+		clearClip();
+		m_gl.glEnable(GL1.GL_STENCIL_TEST);
+		addClip(x, y, width, height);
+
+		m_clip = new Rectangle2D.Float(x, y, width, height);
+	}
+	public void addClip(float x, float y, float width, float height) {
+		m_gl.glColorMask(false, false, false, false);
+		m_gl.glDepthMask(false);
+		StencilBuffer.getInstance().setTest(new StencilTest(TestFunction.NEVER,  1, 0xFF), m_gl);
+		//Overwrite the stencil buffer
+		StencilBuffer.getInstance().setOperation(new StencilOperation(StencilOP.REPLACE,  
+												   StencilOP.KEEP, StencilOP.KEEP), m_gl);
+		//Enable drawing to stencil buffer(sets mask to 0xFF)
+		StencilBuffer.getInstance().setEnabled(true, m_gl);
+		
+		fillRect(x, y, width, height);
+		//Set mask to 0x00(no drawing to stencil buffer)
+		StencilBuffer.getInstance().setEnabled(false, m_gl);		
+		m_gl.glColorMask(true, true, true, true);
+		m_gl.glDepthMask(true);
+		
+		StencilBuffer.getInstance().setTest(new StencilTest(TestFunction.EQUAL,  1, 0xFF), m_gl);
+	}
+	
+	public void clearClip() {
+		StencilBuffer.getInstance().clear(m_gl);
+		m_gl.glDisable(GL1.GL_STENCIL_TEST);
+		m_clip = null;
+	}
 
 	public Vector2f getTranslation() {
 		return MatrixUtils.getTranslation(m_modelMat.getCurrentMatrix());
@@ -247,7 +326,7 @@ public class GLPainter implements Painter {
 	@Override
 	public void fillRoundedRect(float x, float y, float width, float height,
 								float radius) {
-		int resolution = (int) ( getScale().scale(radius).length() / 10 );
+		int resolution = (int) ( getScale().scale(radius).length() );
 		fillRoundedRect(x, y, width, height, radius, resolution, 0, 0, 1, 1);
 	}
 	@Override

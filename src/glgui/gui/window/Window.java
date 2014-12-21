@@ -1,7 +1,15 @@
 package glgui.gui.window;
 
+import glcommon.input.Key;
+import glcommon.input.KeyListener;
+import glcommon.input.Keyboard;
+import glcommon.input.Mouse;
+import glcommon.input.Mouse.MouseButton;
+import glcommon.input.MouseListener;
 import glcommon.vector.Vector2f;
 import glgui.gui.BorderPane;
+import glgui.input.KeyPressedEvent;
+import glgui.input.KeyReleasedEvent;
 import glgui.input.MouseButtonEvent;
 import glgui.input.MouseEnterEvent;
 import glgui.input.MouseExitEvent;
@@ -11,9 +19,6 @@ import glgui.painter.Painter;
 import glgui.render.pipeline.PWindow;
 import glgui.render.pipeline.PWindowProvider;
 import glgui.render.pipeline.Pipeline;
-import gltools.input.Mouse;
-import gltools.input.Mouse.MouseButton;
-import gltools.input.MouseListener;
 
 public class Window {
 	private PWindow m_window;
@@ -60,6 +65,44 @@ public class Window {
 				m_contentPane.onEvent(new MouseExitEvent(m.getX(), m.getY()));
 			}
 		});
+		m_window.getKeyboard().addListener(new KeyListener() {
+			@Override
+			public void keyPressed(Keyboard k, Key key) {
+				m_contentPane.onEvent(new KeyPressedEvent(key));
+			}
+			@Override
+			public void keyReleased(Keyboard k, Key key) {
+				m_contentPane.onEvent(new KeyReleasedEvent(key));
+			}
+		});
+		m_window.addStateListener(new WindowStateListener() {
+			@Override
+			public void windowClosed() {}
+			@Override
+			public void windowRefresh() {}
+
+			@Override
+			public void windowFocused() {}
+
+			@Override
+			public void windowUnfocused() {
+				m_contentPane.unfocus();
+			}
+
+			@Override
+			public void windowMinimized() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void windowMaximized() {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		m_contentPane.setID("contentPane");
 	}
 	protected PWindow getImp() {
 		return m_window;
@@ -101,7 +144,7 @@ public class Window {
 		if (!wasVisible && visible) RenderThread.getInstance().addWindow(this);
 		else if (wasVisible && !visible) RenderThread.getInstance().removeWindow(this);
 	}
-
+	
 	public void addStateListener(WindowStateListener l) {
 		m_window.addStateListener(l);
 	}

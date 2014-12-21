@@ -31,9 +31,9 @@ public abstract class Node implements Stylable, CSSNode {
 	private int m_width = 0;
 	private int m_height = 0;
 	
-	private Dimension m_preferredSize = new Dimension(0, 0);
-	private Dimension m_minimumSize = new Dimension(0, 0);
-	private Dimension m_maximumSize = new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE);
+	protected Dimension m_preferredSize = new Dimension(0, 0);
+	protected Dimension m_minimumSize = new Dimension(0, 0);
+	protected Dimension m_maximumSize = new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE);
 	
 	private boolean m_hovered = false;
 	
@@ -72,20 +72,33 @@ public abstract class Node implements Stylable, CSSNode {
 		return sheets;
 	}
 	
+	public int getAbsoluteX() {
+		if (m_parent != null) return m_x + m_parent.getAbsoluteX();
+		else return m_x;
+	}
+	public int getAbsoluteY() {
+		if (m_parent != null) return m_y + m_parent.getAbsoluteX();
+		else return m_y;
+		
+	}
+	
 	public boolean isHovered() { return m_hovered; }
+	public boolean isFocused() { return FocusManager.getInstance().isFocused(this); }
 	
 	public void setX(int x) { m_x = x; }
 	public void setY(int y) { m_y = y; }
 	public void setWidth(int w) { m_width = w; }
 	public void setHeight(int h) { m_height = h; }
 	
-	public void setParent(Parent parent) { m_parent = parent; }
+	public void setParent(Parent parent) { 
+		m_parent = parent;
+	}
 	
 	public void setBounds(int x, int y, int width, int height) {
-		m_x = x;
-		m_y = y;
-		m_width = width;
-		m_height = height;
+		setX(x);
+		setY(y);
+		setWidth(width);
+		setHeight(height);
 	}
 	
 	public void setID(String id) {
@@ -98,17 +111,32 @@ public abstract class Node implements Stylable, CSSNode {
 	
 	public void addStyleSheet(StyleSheet sheet) {
 		m_stylesheets.add(sheet);
+		style();
 	}
 	
 	public void setStyle(String style, Object value) {
 		m_styler.setStyle(style, value);
 	}
 	
+	public boolean hasFocusedChild() {
+		return false;
+	}
+	
 	public boolean inState(String state) {
 		switch(state) {
 		case "hovered": return isHovered();
+		case "focused": return isFocused();
 		default: return false;
 		}
+	}
+	
+	public void focus() {
+		FocusManager.getInstance().focus(this);
+		style();
+	}
+	public void unfocus() {
+		FocusManager.getInstance().resetFocus();
+		style();
 	}
 	
 	public void style() {
@@ -160,6 +188,7 @@ public abstract class Node implements Stylable, CSSNode {
 			m_hovered = false;
 			style();
 		} else if (e instanceof MouseButtonEvent) {
+			if (((MouseButtonEvent) e).isPressed() && !isFocused()) focus();
 			m_waitingMouseRelease = ((MouseButtonEvent) e).isPressed();
 		}
 	}

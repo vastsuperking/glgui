@@ -10,6 +10,10 @@ public interface Painter {
 	public void setPaint(Paint p);
 	public Paint getPaint();
 	
+	public void setClip(float x, float y, float width, float height);
+	public void addClip(float x, float y, float width, float height);
+	public void clearClip();
+	
 	public void pushTransform();
 	public void popTransform();
 	

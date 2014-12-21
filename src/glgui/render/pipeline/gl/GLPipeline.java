@@ -62,6 +62,8 @@ public class GLPipeline implements Pipeline {
 	public void stopRendering() {
 		m_painter.stop();
 		m_gl.releaseCurrent();
+		m_window.getKeyboard().poll();
+		m_window.getMouse().poll();
 		m_window.getGLWindow().update();
 	}
 }

@@ -7,11 +7,14 @@ import glgui.css.eval.CSSFunction;
 import glgui.gui.BorderPane;
 import glgui.gui.Button;
 import glgui.gui.Dimension;
+import glgui.gui.GLNode;
+import glgui.gui.TextField;
 import glgui.gui.window.Window;
 import glgui.gui.window.WindowStateListener;
 import glgui.painter.LinearGradientPaint;
 import glgui.painter.LinearGradientPaint.Direction;
 import glgui.render.pipeline.gl.GLWindowProvider;
+import gltools.test.renderer.Renderer2DDeferredTest;
 
 import java.io.IOException;
 
@@ -62,8 +65,15 @@ public class StyleTest {
 		Button buttonB = new Button("Bar");
 		buttonB.setMinimumSize(new Dimension(300, 300));
 		
-		content.setCenter(buttonA);
-		content.setLeft(buttonB);
+		TextField field = new TextField(300);
+		
+		GLNode widget = new GLNode();
+		widget.setApplication(new Renderer2DDeferredTest());
+		
+		//content.setRight(buttonA);
+		content.setCenter(widget);
+		content.setLeft(field);
+		content.setRight(buttonA);
 		
 		window.addStateListener(new WindowStateListener() {
 			@Override
