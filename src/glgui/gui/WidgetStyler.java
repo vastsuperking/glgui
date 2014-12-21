@@ -26,7 +26,6 @@ public class WidgetStyler {
 		n.getStyler().addStyler("background", new Styler<Color>(Color.class) {
 			@Override
 			public void setStyle(String style, Color value) {
-				System.out.println("Setting background to: " + value);
 				setBackgroundPaint(new SolidPaint(value));
 			}
 

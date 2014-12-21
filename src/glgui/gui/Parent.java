@@ -65,7 +65,7 @@ public abstract class Parent extends Node {
 					}
 				} else if (nx >= 0 && ny >= 0 && 
 						   nx <= n.getWidth() && ny <= n.getHeight()) {
-					n.onEvent(me);
+					n.onEvent(me.createNew(nx, ny));
 					if (!n.isHovered()) {
 						n.onEvent(new MouseEnterEvent(nx, ny));
 					}

@@ -87,8 +87,8 @@ public abstract class Node implements Stylable, CSSNode {
 	
 	public void setX(int x) { m_x = x; }
 	public void setY(int y) { m_y = y; }
-	public void setWidth(int w) { m_width = w; }
-	public void setHeight(int h) { m_height = h; }
+	public void setWidth(int w) { m_width = Math.max(w, m_minimumSize.getWidth()); }
+	public void setHeight(int h) { m_height = Math.max(h, m_minimumSize.getHeight()); }
 	
 	public void setParent(Parent parent) { 
 		m_parent = parent;
